@@ -1,0 +1,16 @@
+version: '2'
+services:
+    db:
+        image: postgres
+    web:
+        build: .
+        command: bash docker-entrypoint.sh
+        expose:
+            - 8000
+        enviromnent:
+            - VIRTUAL_HOST=img-test.squizduos.ru
+            - VIRTUAL_PORT=8000
+            - LETSENCRYPT_HOST=img-test.squizduos.ru
+            - LETSENCRYPT_EMAIL=squizduos@gmail.com
+        depends_on:
+            - db

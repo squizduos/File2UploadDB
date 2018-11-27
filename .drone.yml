@@ -1,0 +1,25 @@
+pipeline:
+    deploy:
+        image: docker/compose:1.9.0
+        commands:
+          - docker-compose build
+          - docker-compose up -d
+        volumes:
+          - /var/run/docker.sock:/var/run/docker.sock
+
+    telegram:
+        image: appleboy/drone-telegram
+        secrets:
+          - telegram_token
+        to: 
+         - 57439615
+        message: >
+            {{#success build.status}}
+                Попытка собрать {{repo.name}} номер [#{{build.number}}]({{build.link}}) успешна! Заходи и наслаждайся :-)
+            {{else}}
+                Попытка собрать {{repo.name}} номер [#{{build.number}}]({{build.link}}) провалилась :-( Срочно пни @squizduos.
+            {{/success}}
+        when:
+            status:
+              - success
+              - failure

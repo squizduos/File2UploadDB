@@ -7,7 +7,7 @@ services:
         command: bash docker-entrypoint.sh
         expose:
             - 8000
-        enviromnent:
+        environment:
             - VIRTUAL_HOST=img-test.squizduos.ru
             - VIRTUAL_PORT=8000
             - LETSENCRYPT_HOST=img-test.squizduos.ru

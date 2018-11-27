@@ -14,3 +14,5 @@ services:
             - LETSENCRYPT_EMAIL=squizduos@gmail.com
         depends_on:
             - db
+
+            

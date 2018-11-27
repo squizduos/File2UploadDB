@@ -3,7 +3,6 @@ services:
     db:
         image: postgres
     web:
-        restart: "no"
         build: .
         command: bash docker-entrypoint.sh
         expose:
@@ -16,4 +15,7 @@ services:
         depends_on:
             - db
 
-            
+networks:
+  default:
+    external:
+      name: nginx-proxy

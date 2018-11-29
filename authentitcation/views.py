@@ -77,7 +77,7 @@ class RegisterView(View):
         except:
             return render(request, 'login.html', context={"login_errors": "User was registered successfully; please login using login and password"})
         if password != confirm_password:
-            return render(request, 'register.html', context={"register_errors": "Password and password confirmation are not match"}, context={'user': user})
+            return render(request, 'register.html', context={"register_errors": "Password and password confirmation are not match", user=user})
         user.set_password(password)
         user.login_hash = ''
         user.save()

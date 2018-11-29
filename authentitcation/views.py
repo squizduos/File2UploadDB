@@ -50,11 +50,11 @@ class AdminRegisterView(UserPassesTestMixin, View):
         try:
             user = User.objects.create_user(username=username, email=email)
         except Exception as e:
-            return render(request, 'admin_register.html', context={"register_errors": "This user is already exist or have incorrect data: " + str(e)})
+            return render(request, 'admin_register.html', context={"register_errors": "This user is already exist or have incorrect data."})
         try:
             send_registration_email(user)
         except Exception as e:
-            return render(request, 'admin_register.html', context={"register_errors": "Can not send mail: " + str(e)})
+            return render(request, 'admin_register.html', context={"register_errors": "Can not send mail."})
         return render(request, 'admin_register.html', context={"success_message": "User is successfully added!"})
 
 @method_decorator(csrf_exempt, name='dispatch')
@@ -77,7 +77,7 @@ class RegisterView(View):
         except:
             return render(request, 'login.html', context={"login_errors": "User was registered successfully; please login using login and password"})
         if password != confirm_password:
-            return render(request, 'register.html', context={"register_errors": "Password and password confirmation are not match", user=user})
+            return render(request, 'register.html', context={"register_errors": "Password and password confirmation are not match", "user": user})
         user.set_password(password)
         user.login_hash = ''
         user.save()

@@ -21,7 +21,7 @@ from authentitcation.views import AdminRegisterView, RegisterView, LoginView, Ho
 urlpatterns = [
     path('', HomeView, name='home'),
     path('admin/', admin.site.urls),
-    path('signup/', LoginView.as_view(), name="login-view"),
+    path('login/', LoginView.as_view(), name="login-view"),
     path('signup/admin/register',AdminRegisterView.as_view()),
     path('signup/register/<str:login_hash>', RegisterView.as_view())
 ]

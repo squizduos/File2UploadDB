@@ -1,8 +1,9 @@
 from django.http import HttpResponse
 from django.template import Context
 from django.template.loader import render_to_string, get_template
-from django.core.mail import EmailMessage
+from django.core.mail import EmailMultiAlternatives
 from django.conf import settings
+from django.utils.html import strip_tags
 
 def send_registration_email(user):
     subject = "Registration at website"
@@ -14,8 +15,11 @@ def send_registration_email(user):
         'settings': settings
     }
 
-    message = render_to_string('email/registration.html', ctx)
+    html_content = render_to_string('email/registration.html', ctx)
+    text_content = strip_tags(html_content) 
 
-    EmailMessage(subject, message, to=to, from_email=from_email).send()
+    msg = EmailMultiAlternatives(subject, text_content, from_email, to)
+    msg.attach_alternative(html_content, "text/html")
+    msg.send()
 
     return True

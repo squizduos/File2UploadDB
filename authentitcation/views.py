@@ -20,11 +20,11 @@ from .utils import send_registration_email
 @method_decorator(csrf_exempt, name='dispatch')
 class LoginView(View):
     def get(self, request):
-        return render(request, 'signup.html')
+        return render(request, 'login.html')
     
     def post(self, request):
         if not 'username' in request.POST or not 'password' in request.POST:
-            return render(request, 'signup.html', context={"login_errors": "Not all fields are provided"})
+            return render(request, 'login.html', context={"login_errors": "Not all fields are provided"})
         username = request.POST.get('username')    
         password = request.POST.get('password')
         user = authenticate(username=username, password=password)
@@ -32,7 +32,7 @@ class LoginView(View):
             login(request, user)
             return redirect('home')
         else:
-            return render(request, 'signup.html', context={"login_errors": "Username or password is incorrect"})
+            return render(request, 'login.html', context={"login_errors": "Username or password is incorrect"})
 
 @method_decorator(csrf_exempt, name='dispatch')
 class AdminRegisterView(UserPassesTestMixin, View):
@@ -59,20 +59,19 @@ class AdminRegisterView(UserPassesTestMixin, View):
 
 @method_decorator(csrf_exempt, name='dispatch')
 class RegisterView(View):
-    def get(self, request):
-        login_hash = request.GET.get('login_hash')    
+    def get(self, request, login_hash):
         try:
             user = User.objects.get(login_hash=login_hash)
         except:
             return render(request, 'login.html', context={"login_errors": "User was registered successfully; please login using login and password"})
         return render(request, 'register.html', context={'user': user})
 
-    def post(self, request):
-        if not 'username' in request.POST or not 'email' in request.POST or not 'password' in request.POST:
+    def post(self, request, login_hash):
+        if not 'password' in request.POST or not 'confirm-password' in request.POST:
             return render(request, 'register.html', context={"register_errors": "Not all fields are provided"})
-        login_hash = request.POST.get('login_hash')    
+        # login_hash = request.POST.get('login_hash')    
         password = request.POST.get('password')
-        confirm_password = request.POST.get('confirm_password')
+        confirm_password = request.POST.get('confirm-password')
         try:
             user = User.objects.get(login_hash=login_hash)
         except:

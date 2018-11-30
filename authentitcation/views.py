@@ -4,7 +4,7 @@ from django.shortcuts import render
 
 from django.views.generic import TemplateView, View
 
-from django.contrib.auth import login, authenticate
+from django.contrib.auth import login, authenticate, logout
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, redirect
@@ -30,7 +30,7 @@ class LoginView(View):
         user = authenticate(username=username, password=password)
         if user:
             login(request, user)
-            return redirect('home')
+            return redirect('dashboard')
         else:
             return render(request, 'login.html', context={"login_errors": "Username or password is incorrect"})
 
@@ -82,10 +82,12 @@ class RegisterView(View):
         user.login_hash = ''
         user.save()
         login(request, user)
-        return redirect('home')
+        return redirect('dashboard')
 
 
-@csrf_exempt
-@login_required
-def HomeView(request):
-    return HttpResponse('Successfully!')
+@method_decorator(csrf_exempt, name='dispatch')
+class LogoutView(LoginRequiredMixin, View):
+    login_url = "/login/"
+    def get(self, request):
+        logout(request)
+        return redirect('dashboard')

@@ -20,6 +20,8 @@ from .utils import send_registration_email
 @method_decorator(csrf_exempt, name='dispatch')
 class LoginView(View):
     def get(self, request):
+        if request.user.is_authenticated:
+            return redirect('dashboard')
         return render(request, 'login.html')
     
     def post(self, request):

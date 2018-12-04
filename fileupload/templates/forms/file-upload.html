@@ -1,13 +1,16 @@
+<script src="/static/js/dragndrop.js"></script>
+
 <div class="row">
     <div class="col-lg-12">
         <form id="file-upload-form" role="form" style="display: block;">                        
             <div class="form-group">
                 <div class="row">
                     <div class="col-lg-12">
-                        <div class="text-center">
+                        <div class="text-center" id="dropZone">
                             <button class="btn btn btn-primary btn-file btn-lg">
                                 + Create<input type="file" accept=".csv, .xls, .xlsx, .dta">
                             </button>
+                            
                         </div>
                     </div>
                 </div>
@@ -16,7 +19,16 @@
                 <div class="row">
                     <div class="col-lg-12">
                         <div class="text-center">
-                            <input type="checkbox"> <span>the document meets the <a>regulation</a></span>
+                            <span id="selectedFile"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="form-group">
+                <div class="row">
+                    <div class="col-lg-12">
+                        <div class="text-center">
+                            <input type="checkbox" id="agreeToRegulations"> <span>the document meets the <a>regulation</a></span>
                         </div>
                     </div>
                 </div>
@@ -24,3 +36,4 @@
         </form>                            
     </div>
 </div>
+

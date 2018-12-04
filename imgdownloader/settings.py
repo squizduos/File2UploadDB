@@ -138,7 +138,7 @@ STATIC_ROOT = os.path.join(PROJECT_DIR, 'production_static')
 DOMAIN = "ec2-18-191-152-229.us-east-2.compute.amazonaws.com"
 
 EMAIL_USE_TLS = True
-EMAIL_HOST = 'smtp.yandex.ru'
+EMAIL_HOST = 'smtp.udag.de'
 EMAIL_PORT = 587
-EMAIL_HOST_USER = 'squizduos@yandex.ru'
-EMAIL_HOST_PASSWORD = 'nofagem6082'
+EMAIL_HOST_USER = 'dev@databorn.net'
+EMAIL_HOST_PASSWORD = 'Z8MCuV93=TQD97m'

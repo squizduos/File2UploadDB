@@ -7,7 +7,7 @@ $(document).ready(function() {
     
     // Проверка поддержки браузером
     if (typeof(window.FileReader) == 'undefined') {
-        selectedFile.text('Не поддерживается браузером!');
+        selectedFile.text('Not supported by your browser!');
         selectedFile.addClass('error');
     }
     
@@ -33,58 +33,76 @@ $(document).ready(function() {
         
         // Проверяем размер файла
         if (file.size > maxFileSize) {
-            dropZone.text('Файл слишком большой!');
-            dropZone.addClass('error');
+            selectedFile.text('File is too big!');
+            selectedFile.addClass('error');
             return false;
         }
         selectedFile.text(file.name);
         if ($('#agreeToRegulations').checked) {
-            $('#uploadStart').prop('disabled', false);
+            $('#uploadFile').prop('disabled', false);
+        } else {
+            selectedFile.text('Agree to document regulations first!');
+            selectedFile.addClass('error');
         }
+        uploadFile(e);
     };
 
 
     // Отображение файла при обычной загрузке
     $("input:file").change(function (){
-        var fileName = $(this).val();
-        $('#selectedFile').text(fileName);
-        if ($('#agreeToRegulations').checked) {
-            $('#uploadStart').prop('disabled', false);
-        }
+        uploadFile(event);
     });
 
     // Разблокировка загрузчика при выборе галочки
     $('#agreeToRegulations').change(function() {
-        if (this.checked && selectedFile.text().length > 0) {
-            $('#uploadStart').prop('disabled', false);
+        if (this.checked) {
+            $('#uploadFile').prop('disabled', false);
         }
     });
 
     // Аплоад файла
     function uploadFile(event) {
+        console.log('Uploading...');
+        var fileName = $("input:file").val();
+        var file = $("input:file")[0].files[0];
+
+        var form_data = new FormData();
+        form_data.append("document", file);
+        console.log(form_data);
+        console.log('here');
+    
         var xhr = new XMLHttpRequest();
         xhr.upload.addEventListener('progress', uploadProgress, false);
         xhr.onreadystatechange = stateChange;
-        xhr.open('POST', '/upload.php');
-        xhr.setRequestHeader('X-FILE-NAME', file.name);
-        xhr.send(file);
+        xhr.open('POST', '/dashboard/');
+        // xhr.setRequestHeader('X-FILE-NAME', file.name);
+        xhr.send(form_data);
     }
     
     // Показываем процент загрузки
     function uploadProgress(event) {
         var percent = parseInt(event.loaded / event.total * 100);
-        dropZone.text('Загрузка: ' + percent + '%');
+        $('#uploadFile').html('Loading: ' + percent + '%');
     }
     
     // Пост обрабочик
     function stateChange(event) {
         if (event.target.readyState == 4) {
             if (event.target.status == 200) {
-                dropZone.text('Загрузка успешно завершена!');
-                ("#file_storage").text("Temporary - deleted after import to database");
+                var data = $.parseJSON(event.target.response);
+                $.each(data, function(key, value){
+                    $('#'+key).val(value);
+                  });  
+                $.each(data['enabled_for_editing'], function(key, value){
+                    $('#'+value).prop('disabled', false);
+                  });                
+                selectedFile.text('File is successfully uploaded!');
+                $('#uploadFile').prop('onClick', "function(e) {window.location.reload(false)}");
+                $('#uploadFile').html('Remove');
+                $('#uploadFile').prop('class', 'btn btn-danger btn-lg');
             } else {
-                dropZone.text('Произошла ошибка!');
-                dropZone.addClass('error');
+                selectedFile.text('Error on uploading; try again later!');
+                selectedFile.addClass('error');
             }
         }
     }

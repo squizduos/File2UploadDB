@@ -5,19 +5,24 @@
         <form id="file-info-form" role="form" style="display: block;">                        
             <div class="form-group">
                 <label for="file_path">path:</label>
-                <p class="form-control-static" id="file_path"></p>
+                <input type="input" class="form-control" id="file_path" disabled>
             </div>
             <div class="form-group">
                 <label for="file_name">name:</label>
-                <p class="form-control-static" id="file_name"></p>
+                <input type="input" class="form-control" id="file_name" disabled>
             </div>
             <div class="form-group">
                 <label for="file_storage">storage:</label>
-                <p class="form-control-static" id="file_storage"></p>
+                <input type="input" class="form-control" id="file_storage" disabled>
             </div>
             <div class="form-group">
                 <label for="file_type">file type:</label>
-                <input type="input" class="form-control" id="file_type" disabled>
+                <select class="form-control" id="file_type">
+                    <option>CSV</option>
+                    <option>XLS</option>
+                    <option>XLSX</option>
+                    <option>DTA</option>
+                </select>
             </div>
             <div class="form-group">
                 <label for="file_header_line">header line:</label>

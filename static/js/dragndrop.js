@@ -38,13 +38,14 @@ $(document).ready(function() {
             return false;
         }
         selectedFile.text(file.name);
-        if ($('#agreeToRegulations').checked) {
+        if ($('#agreeToRegulations')[0].checked) {
             $('#uploadFile').prop('disabled', false);
+            $("#inputUploadFile")[0].files = event.dataTransfer.files;
+            uploadFile(event);
         } else {
             selectedFile.text('Agree to document regulations first!');
             selectedFile.addClass('error');
         }
-        uploadFile(e);
     };
 
 
@@ -82,7 +83,7 @@ $(document).ready(function() {
     // Показываем процент загрузки
     function uploadProgress(event) {
         var percent = parseInt(event.loaded / event.total * 100);
-        $('#uploadFile').html('Loading: ' + percent + '%');
+        $('#uploadStatus').html('Loading: ' + percent + '%');
     }
     
     // Пост обрабочик

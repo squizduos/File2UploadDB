@@ -31,7 +31,8 @@ class DashboardView(LoginRequiredMixin, View):
         else:
             response['file_type'] == 'CSV'
         if response['file_type'] == 'CSV':
-            response['enabled_for_editing'].append('file_header_line', 'file_separator')
+            response['enabled_for_editing'].append('file_header_line')
+            response['enabled_for_editing'].append('file_separator')
         elif response['file_type'] == 'XLS':
             response['enabled_for_editing'].append('file_header_line')
             response['file_separator'] = 'not applicable'

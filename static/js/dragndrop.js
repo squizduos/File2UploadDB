@@ -82,6 +82,8 @@ $(document).ready(function() {
         var percent = parseInt(event.loaded / event.total * 100);
         $('#progessBarDiv').prop('style', "display: block");
         $('#uploadButtonDiv').prop('class', "col-lg-3");
+        $('#uploadFile').prop('style', "");
+
         $('#uploadProgressBar').prop('aria-valuenow', percent);
         $('#uploadProgressBar').prop('style', 'width: '+percent+'%');
         $('#uploadButtonProgress').html('Uploading '+percent+'%...');

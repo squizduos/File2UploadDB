@@ -63,15 +63,12 @@ $(document).ready(function() {
 
     // Аплоад файла
     function uploadFile(event) {
-        console.log('Uploading...');
         var fileName = $("input:file").val();
         var file = $("input:file")[0].files[0];
 
         var form_data = new FormData();
         form_data.append("document", file);
-        console.log(form_data);
-        console.log('here');
-    
+
         var xhr = new XMLHttpRequest();
         xhr.upload.addEventListener('progress', uploadProgress, false);
         xhr.onreadystatechange = stateChange;
@@ -83,25 +80,40 @@ $(document).ready(function() {
     // Показываем процент загрузки
     function uploadProgress(event) {
         var percent = parseInt(event.loaded / event.total * 100);
-        $('#uploadStatus').html('Loading: ' + percent + '%');
+        $('#progessBarDiv').prop('style', "display: block");
+        $('#uploadButtonDiv').prop('class', "col-lg-3");
+        $('#uploadProgressBar').prop('aria-valuenow', percent);
+        $('#uploadProgressBar').prop('style', 'width: '+percent+'%');
+        $('#uploadButtonProgress').html('Uploading '+percent+'%...');
     }
     
     // Пост обрабочик
     function stateChange(event) {
         if (event.target.readyState == 4) {
             if (event.target.status == 200) {
+                $('#uploadProgressBar').prop('aria-valuenow', 100);
+                $('#uploadProgressBar').prop('style', 'width: 100%');
                 var data = $.parseJSON(event.target.response);
-                $.each(data, function(key, value){
-                    $('#'+key).val(value);
-                  });  
-                $.each(data['enabled_for_editing'], function(key, value){
-                    $('#'+value).prop('disabled', false);
-                  });                
-                selectedFile.text('File is successfully uploaded!');
-                $('#uploadFile').prop('onClick', "function(e) {window.location.reload(false)}");
-                $('#uploadFile').html('Remove');
-                $('#uploadFile').prop('class', 'btn btn-danger btn-lg');
+                if (!data['error']) {
+                    $.each(data, function(key, value){
+                        $('#'+key).val(value);
+                      });  
+                    $.each(data['enabled_for_editing'], function(key, value){
+                        $('#'+value).prop('disabled', false);
+                      });                
+                    selectedFile.text('File is successfully uploaded!');
+                    $('#uploadFile').prop('onClick', "function(e) {window.location.reload(false)}");
+                    $('#uploadFile').html('Remove');
+                    $('#uploadFile').prop('class', 'btn btn-danger btn-lg');    
+                } else {
+                    $('#uploadProgressBar').removeClass("progress-bar-success");
+                    $('#uploadProgressBar').addClass("progress-bar-danger");
+                    selectedFile.text('Error on uploading; try again later or check format!');
+                    selectedFile.addClass('error');    
+                }
             } else {
+                $('#uploadProgressBar').removeClass("progress-bar-success");
+                $('#uploadProgressBar').addClass("progress-bar-danger");
                 selectedFile.text('Error on uploading; try again later!');
                 selectedFile.addClass('error');
             }

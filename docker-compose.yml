@@ -10,9 +10,9 @@ services:
         expose:
             - 8000
         environment:
-            - VIRTUAL_HOST=ec2-3-16-10-188.us-east-2.compute.amazonaws.com
+            - VIRTUAL_HOST=img-test.squizduos.ru
             - VIRTUAL_PORT=8000
-            - LETSENCRYPT_HOST=ec2-3-16-10-188.us-east-2.compute.amazonaws.com
+            - LETSENCRYPT_HOST=img-test.squizduos.ru
             - LETSENCRYPT_EMAIL=squizduos@gmail.com
         depends_on:
             - db

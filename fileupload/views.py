@@ -3,6 +3,7 @@ logger = logging.getLogger('admin_log')
 
 import os
 
+
 from django.shortcuts import render
 
 # Create your views here.
@@ -20,7 +21,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.forms.models import model_to_dict
 
 from .forms import DocumentForm
-from .utils import file_read_from_tail
+from .utils import file_read_from_tail, connect_to_db
 
 
 @method_decorator(csrf_exempt, name='dispatch')
@@ -66,6 +67,14 @@ class DashboardView(LoginRequiredMixin, View):
             logger.info(f'Incorrect request at /dashboard/ endpoint')
             return JsonResponse({'error': 'Call via POST this method'})
 
+
+@method_decorator(csrf_exempt, name='dispatch')
+class UploadToDBView(LoginRequiredMixin, View):
+    login_url = "/login/"
+    
+    def post(self, request):
+        cur = connect_to_db(request['db_type'], request['db_host'], request['db_name'], request['db_username'], request['db_password'])
+        return JsonResponse({'error': ''})
 
 @method_decorator(csrf_exempt, name='dispatch')
 class AdminDashboardView(UserPassesTestMixin, View):

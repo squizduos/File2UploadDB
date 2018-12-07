@@ -121,6 +121,24 @@ $(document).ready(function() {
             }
         }
     }
+
+    function validateForm() {
+        var isValid = true;
+        $('input').each(function() {
+          if ( $(this).val() === '' )
+              isValid = false;
+        });
+        return isValid;
+      }
+      
+    // Разблокировка при заполнении всех полей
+    $('input').on("change keyup paste", function() {
+        if(validateForm()) {
+            $('#uploadStart').prop('disabled', false);
+        }
+    });
+    
+
     
 });
 

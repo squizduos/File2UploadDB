@@ -4,6 +4,14 @@ services:
         image: postgres
         volumes:
              - pgdata:/var/lib/postgresql/data
+    oracle:
+        image: wnameless/oracle-xe-11g
+        expose:
+            - 49161
+        environment:
+            ORACLE_ALLOW_REMOTE=true
+        volumes:
+            - ordata:/opt/oracle/oradata
     web:
         build: .
         command: bash docker-entrypoint.sh
@@ -15,10 +23,21 @@ services:
             - LETSENCRYPT_HOST=img-test.squizduos.ru
             - LETSENCRYPT_EMAIL=squizduos@gmail.com
         depends_on:
-            - db
+    adminer:
+        image: adminer
+        restart: always
+        expose:
+            - 8080
+        environment:
+            - VIRTUAL_HOST=img-db.squizduos.ru
+            - VIRTUAL_PORT=8080
+            - LETSENCRYPT_HOST=img-db.squizduos.ru
+            - LETSENCRYPT_EMAIL=squizduos@gmail.com
+
 
 volumes:
   pgdata:
+  ordata:
 
 networks:
   default:

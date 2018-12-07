@@ -1,3 +1,5 @@
 Django==2.0
 psycopg2==2.6.2
 Pillow
+cx_Oracle
+pandas

@@ -142,3 +142,51 @@ EMAIL_HOST = 'smtp.udag.de'
 EMAIL_PORT = 587
 EMAIL_HOST_USER = 'dev@databorn.net'
 EMAIL_HOST_PASSWORD = 'Z8MCuV93=TQD97m'
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '{levelname} {asctime} {module} {process:d} {thread:d} {message}',
+            'style': '{',
+        },
+        'simple': {
+            'format': '{levelname} {message}',
+            'style': '{',
+        },
+    },
+
+    'handlers': {
+        'console': {
+            'level': 'INFO',
+            'class': 'logging.FileHandler',
+            'filename': 'info.log',
+        },
+        'debug': {
+            'level': 'DEBUG',
+            'class': 'logging.StreamHandler',
+            'formatter': 'simple'
+        },
+        'error': {
+            'level': 'ERROR',
+            'class': 'logging.StreamHandler',
+            'formatter': 'simple'
+        },
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['debug'],
+            'propagate': True,
+        },
+        'django.request': {
+            'handlers': ['error'],
+            'level': 'ERROR',
+            'propagate': False,
+        },
+        'admin_log': {
+            'handlers': ['console'],
+            'level': 'INFO',
+        }
+    }
+}

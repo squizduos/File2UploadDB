@@ -1,3 +1,6 @@
+import logging
+logger = logging.getLogger('admin_log')
+
 import os
 
 from django.shortcuts import render
@@ -17,6 +20,8 @@ from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.forms.models import model_to_dict
 
 from .forms import DocumentForm
+from .utils import file_read_from_tail
+
 
 @method_decorator(csrf_exempt, name='dispatch')
 class DashboardView(LoginRequiredMixin, View):
@@ -52,10 +57,13 @@ class DashboardView(LoginRequiredMixin, View):
             form = DocumentForm(request.POST, request.FILES)
             if form.is_valid():
                 model = form.save()
+                logger.info(f'New file {{model.id}} is successfully uploaded by user {{request.user.username}} and preparing to upload to DBMS')
                 return JsonResponse(self.prepare_uploaded_file(model))
             else:
+                logger.info(f'File uploading by user {{request.user.username}} error')
                 return JsonResponse({"error": form.errors})
         else:
+            logger.info(f'Incorrect request at /dashboard/ endpoint')
             return JsonResponse({'error': 'Call via POST this method'})
 
 
@@ -66,5 +74,6 @@ class AdminDashboardView(UserPassesTestMixin, View):
 
     login_url = "/login/"
     def get(self, request):
-        return render(request, 'admin-dashboard.html', context={})
+        log = file_read_from_tail('info.log', 10000)
+        return render(request, 'admin-dashboard.html', context={'log': log})
     

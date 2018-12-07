@@ -9,7 +9,7 @@ services:
         expose:
             - 49161
         environment:
-            ORACLE_ALLOW_REMOTE=true
+            - ORACLE_ALLOW_REMOTE=true
         volumes:
             - ordata:/opt/oracle/oradata
     web:

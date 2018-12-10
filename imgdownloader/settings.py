@@ -161,7 +161,7 @@ LOGGING = {
         'console': {
             'level': 'INFO',
             'class': 'logging.FileHandler',
-            'filename': 'info.log',
+            'filename': 'log/info.log',
         },
         'debug': {
             'level': 'DEBUG',

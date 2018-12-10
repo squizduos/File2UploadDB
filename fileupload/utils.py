@@ -81,11 +81,11 @@ def convert_name_to_string(el):
 
 def convert_type_to_string(el):
     if isinstance(el, bool):
-        return '"true"' if el else '"false"'
+        return "'true'" if el else "'false'"
     elif isinstance(el, int):
         return str(el)
     else:
-        return '\'%s\'' % str(el)
+        return '\'%s\'' % str(el.replace("\'", "\'\'"))
 
 def write_row_to_db(db_type, conn, table_name, columns):
     column_names = []
@@ -112,7 +112,7 @@ def write_row_to_db(db_type, conn, table_name, columns):
         ) + ")"
         try:
             cursor.execute(sql)
-            con.commit()
+            conn.commit()
             cursor.close()
         except Exception as e:
             return False, str(e), sql

@@ -24,6 +24,9 @@ services:
             - VIRTUAL_PORT=8000
             - LETSENCRYPT_HOST=img-test.squizduos.ru
             - LETSENCRYPT_EMAIL=squizduos@gmail.com
+    celery:
+        build: .
+        command: celery worker -l info -A imgdownloader
     adminer:
         image: adminer
         restart: always

@@ -8,8 +8,14 @@ services:
         image: wnameless/oracle-xe-11g
         ports:
             - 49161:1521
+            - 8004:8080
+        expose:
+            - 1521
         environment:
             - ORACLE_ALLOW_REMOTE=true
+            - ORACLE_ENABLE_XDB=true
+        volumes:
+            - ordata:/u01/app/oracle/oradata/XE/
     web:
         build: .
         command: bash docker-entrypoint.sh
@@ -20,12 +26,32 @@ services:
         depends_on:
             - db
         dns: 8.8.8.8
+    
+    redis:
+        image: redis:latest
+
+    celery:
+        build: .
+        command: celery worker -l info -A imgdownloader
+        volumes:
+        - '.:/code'
+
     adminer:
         image: adminer
         restart: always
         ports:
         - 8002:8080
 
+    celery-flower:
+        build: .
+        command:  celery flower -A imgdownloader --address=0.0.0.0 --port=5555 
+        ports:
+            - "8003:5555"
+        volumes:
+        - '.:/code'
+        
+
+
 volumes:
     pgdata:
-
+    ordata:

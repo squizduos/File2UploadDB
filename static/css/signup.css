@@ -113,3 +113,14 @@
     cursor: inherit;
     display: block;
 }
+
+.progress {
+    position: relative;
+}
+
+.progress span {
+    position: absolute;
+    display: block;
+    width: 100%;
+    color: black;
+ }

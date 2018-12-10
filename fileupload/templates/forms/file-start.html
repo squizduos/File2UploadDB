@@ -3,10 +3,19 @@
         <form id="file-upload-form" role="form" style="display: block;">                        
             <div class="form-group">
                 <div class="row">
-                    <div class="col-lg-12 col-lg-offset-3">
+                    <div class="col-lg-9">
+                        <div class="text-center">
+                            <div class="progress" id="workProgessBarDiv" style="display:none">
+                                <div id="workProgessBar" class="progress-bar progress-bar-striped progress-bar-animated progress-bar-success" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" style="width: 0%;">
+                                    <span id="workProgessBarStatus">Starting...</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>      
+                    <div class="col-lg-3">
                         <div class="text-center">
                             <button class="btn btn btn-primary btn-file btn-lg" id="uploadStart" disabled>
-                                upload
+                                start
                             </button>
                         </div>
                     </div>

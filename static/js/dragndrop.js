@@ -72,7 +72,7 @@ $(document).ready(function() {
         var xhr = new XMLHttpRequest();
         xhr.upload.addEventListener('progress', uploadProgress, false);
         xhr.onreadystatechange = stateChange;
-        xhr.open('POST', '/dashboard/');
+        xhr.open('POST', '/api/upload/');
         // xhr.setRequestHeader('X-FILE-NAME', file.name);
         xhr.send(form_data);
     }
@@ -122,9 +122,21 @@ $(document).ready(function() {
         }
     }
 
+    // При выборе PostgreSQL лочится SID
+    $('#db_type').on("change", function() {
+        if($(this).find(":selected").val() == 'PostgreSQL') {
+            $('#db_sid').val('not applicable');
+            $('#db_sid').prop('disabled', true);
+        } else {
+            $('#db_sid').val('');
+            $('#db_sid').prop('disabled', false);
+        }
+    });
+
+    // Проверяем заполненность полей формы
     function validateForm() {
         var isValid = true;
-        $('input').each(function() {
+        $('[id*="db_"],[id*="file_"],[id*="table_"]').each(function() {
           if ( $(this).val() === '' )
               isValid = false;
         });
@@ -132,16 +144,86 @@ $(document).ready(function() {
       }
       
     // Разблокировка при заполнении всех полей
-    $('input').on("change keyup paste", function() {
+    $('[id*="db_"],[id*="file_"],[id*="table_"]').on("change keyup paste", function() {
         if(validateForm()) {
             $('#uploadStart').prop('disabled', false);
         }
     });
-    
 
+    var working = false;
+
+    // Загрузка файла
+    $("#uploadStart").click(function (event){
+        event.preventDefault();
+        workWithFile(event);
+    });
+    
+    function workWithFile(event) {
+        var form_data = {};
+        data = $('[id*="db_"],[id*="file_"],[id*="table_"]');
+        for (i = 0; i < data.length; i++) {
+            form_data[data[i].id] = data[i].value;
+        }
+        $('#workProgessBarDiv').prop('style', "display: block");
+        var request = $.ajax({
+            dataType: 'json',
+            url: "/api/work/start",
+            data: JSON.stringify(form_data),
+            type: "POST",
+            error: workWithFileShowError,
+        }); 
+        request.done(function(msg) {
+            working = true;
+            workWithFileCheckStatus(form_data['file_id']);
+        })
+        request.fail(function(jqXHR, textStatus) {
+            workWithFileShowError(textStatus);
+        })         
+    }
+
+    function workWithFileShowError(error) {
+        $('#workProgessBar').removeClass("progress-bar-success");
+        $('#workProgessBar').addClass("progress-bar-danger");
+        $('#workProgessBar').prop('aria-valuenow', 100);
+        $('#workProgessBar').prop('style', 'width: 100%');
+        $('#workProgessBarStatus').html(error);            
+    }
+
+    function workWithFileShowSuccess() {
+        $('#workProgessBar').removeClass("progress-bar-danger");
+        $('#workProgessBar').addClass("progress-bar-success");
+        $('#workProgessBar').prop('aria-valuenow', 100);
+        $('#workProgessBar').prop('style', 'width: 100%');
+        $('#workProgessBarStatus').html('Uploaded successfully!');            
+    }
+
+    function workWithFileCheckStatus(file_id) {
+        if (working) {
+            setTimeout(function() {
+                $.ajax({
+                    url: "/api/work/check/"+file_id,
+                    type: "GET",
+                    success: function(data) {
+                        if (data['percent'] == 100) {
+                            working = false;
+                        }
+                        if (data['status'] == -1) {
+                            workWithFileShowError(data['error']);
+                        }
+                        else if (data['status'] == 2) {
+                            workWithFileShowSuccess();
+                        } else {
+                            $('#workProgessBar').prop('aria-valuenow', data['percent']);
+                            $('#workProgessBar').prop('style', 'width: '+data['percent']+'%');
+                            $('#workProgessBarStatus').html("Uploading " + data['percent'] + '%');                
+                        }
+                    },
+                    dataType: "json",
+                    complete: workWithFileCheckStatus(file_id),
+                    timeout: 2000
+                })
+            }, 1000);    
+        }        
+    }
     
 });
-
-$(function() {
-
- });

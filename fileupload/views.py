@@ -2,7 +2,7 @@ import logging
 logger = logging.getLogger('admin_log')
 
 import os
-
+import json
 
 from django.shortcuts import render
 
@@ -20,16 +20,37 @@ from django.http import HttpResponse, JsonResponse
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.forms.models import model_to_dict
 
-from .forms import DocumentForm
-from .utils import file_read_from_tail, connect_to_db
+from .forms import DocumentUpdateForm, DocumentUploadForm
+from .models import Document
+from .utils import file_read_from_tail
+from .tasks import prepare_and_upload_file
 
 
 @method_decorator(csrf_exempt, name='dispatch')
 class DashboardView(LoginRequiredMixin, View):
     login_url = "/login/"
 
+    def get(self, request):
+        return render(request, 'dashboard.html', context={})
+
+
+@method_decorator(csrf_exempt, name='dispatch')
+class AdminDashboardView(UserPassesTestMixin, View):
+    def test_func(self):
+        return self.request.user.is_superuser
+
+    login_url = "/login/"
+    def get(self, request):
+        log = file_read_from_tail('info.log', 10000)
+        return render(request, 'admin-dashboard.html', context={'log': log})
+
+
+@method_decorator(csrf_exempt, name='dispatch')
+class UploadToServerView(LoginRequiredMixin, View):
+    login_url = "/login/"
+    
     def prepare_uploaded_file(self, model):
-        response = {'file_storage': model.storage, 'enabled_for_editing': ['file_type']}
+        response = {'file_id': model.id, 'file_storage': model.file_storage, 'enabled_for_editing': ['file_type']}
         response['file_path'] = model.document.path
         response['file_name'] = os.path.basename(model.document.name)
         if response['file_name'].split('.')[-1].upper() in ['CSV', 'XLS', 'XLSX', 'DTA']:
@@ -48,41 +69,73 @@ class DashboardView(LoginRequiredMixin, View):
         elif response['file_type'] == 'DTA':
             response['file_header_line'] = 'not applicable'
             response['file_separator'] = 'not applicable'
+        last_successful_load = Document.objects.filter(user=model.user, status=2).last()
+        if last_successful_load:
+            response['db_type'] = last_successful_load.db_type
+            response['db_host'] = last_successful_load.db_host
+            response['db_port'] = last_successful_load.db_port
+            response['db_name'] = last_successful_load.db_name
+            response['db_username'] = last_successful_load.db_username
+            response['db_password'] = last_successful_load.db_password
+            
         return response
-
-    def get(self, request):
-        return render(request, 'dashboard.html', context={})
     
     def post(self, request):
-        if request.method == 'POST':
-            form = DocumentForm(request.POST, request.FILES)
-            if form.is_valid():
-                model = form.save()
-                logger.info(f'New file {{model.id}} is successfully uploaded by user {{request.user.username}} and preparing to upload to DBMS')
-                return JsonResponse(self.prepare_uploaded_file(model))
-            else:
-                logger.info(f'File uploading by user {{request.user.username}} error')
-                return JsonResponse({"error": form.errors})
+        form = DocumentUploadForm(request.POST, request.FILES)
+        if form.is_valid():
+            model = form.save(commit=False)
+            model.user = request.user
+            model.save()
+            logger.info(f'New file {model.id} is successfully uploaded by user {request.user.username} and preparing to upload to DBMS')
+            return JsonResponse(self.prepare_uploaded_file(model))
         else:
-            logger.info(f'Incorrect request at /dashboard/ endpoint')
-            return JsonResponse({'error': 'Call via POST this method'})
-
+            logger.info(f'File uploading by user {request.user.username} error')
+            return JsonResponse({"error": form.errors}, status=400)
 
 @method_decorator(csrf_exempt, name='dispatch')
 class UploadToDBView(LoginRequiredMixin, View):
     login_url = "/login/"
     
     def post(self, request):
-        cur = connect_to_db(request['db_type'], request['db_host'], request['db_name'], request['db_username'], request['db_password'])
-        return JsonResponse({'error': ''})
+        try:
+            data = json.loads(request.body)
+        except Exception as e:
+            logger.info(f'File preparing by user {request.user.username} error; incorrect JSON data')
+            return JsonResponse({"error": "Incorrect JSON data, error: " + str(e)}, status=400)
+        try:
+            document = Document.objects.get(id=data['file_id'])
+        except Exception as e:
+            logger.info(f'File preparing #{data["file_id"]} by user {request.user.username} error; file not found')
+            return JsonResponse({"error": "File not found"}, status=404)
+        form = DocumentUpdateForm(data, instance=document)
+        if form.is_valid():
+            model = form.save(commit=False)
+            model.user = request.user
+            model.save()
+            prepare_and_upload_file.delay(model.id)
+            logger.info(f'File {model.id} uploading to DBMS is started by {request.user.username}')
+            return JsonResponse({"status": "uploading"})
+        else:
+            logger.info(f'File uploading by user {request.user.username} error')
+            return JsonResponse({"error": form.errors}, status=400)
+
 
 @method_decorator(csrf_exempt, name='dispatch')
-class AdminDashboardView(UserPassesTestMixin, View):
-    def test_func(self):
-        return self.request.user.is_superuser
-
+class UploadToDBCheckStatusView(LoginRequiredMixin, View):
     login_url = "/login/"
-    def get(self, request):
-        log = file_read_from_tail('info.log', 10000)
-        return render(request, 'admin-dashboard.html', context={'log': log})
     
+    def get(self, request, file_id):
+        try:
+            document = Document.objects.get(id=file_id)
+        except Exception as e:
+            logger.info(f'File checking status #{data["file_id"]} by user {request.user.username} error; file not found')
+            return JsonResponse({"error": "File not found"}, status=404)
+        if document.status == 0:
+            return JsonResponse({"status": 0, "percent": 0})
+        if document.status == 1:
+            return JsonResponse({"status": 1, "percent": document.uploading_percent})
+        if document.status == 2:
+            return JsonResponse({"status": 2, "percent": 100})
+        if document.status == -1:
+            return JsonResponse({"status": -1, "error": document.error})
+            

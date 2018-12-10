@@ -3,3 +3,8 @@ psycopg2==2.6.2
 Pillow
 cx_Oracle
 pandas
+Celery
+redis
+flower
+pandas
+xlrd>=0.9.0

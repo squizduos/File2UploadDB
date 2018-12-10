@@ -18,7 +18,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 
 
 from .models import User
-from .utils import send_registration_email
+from .tasks import send_registration_email
 
 @method_decorator(csrf_exempt, name='dispatch')
 class LoginView(View):
@@ -62,9 +62,9 @@ class AdminRegisterView(UserPassesTestMixin, View):
             logger.info(f'User {{username}} can\'t be registered, already exist or have incorrect data')
             return render(request, 'admin_register.html', context={"register_errors": "This user is already exist or have incorrect data."})
         try:
-            send_registration_email(user)
+            send_registration_email.delay(user.id)
         except Exception as e:
-            logger.info(f'User {{username}} can\'t be registered, we can\'t send registration letter')
+            logger.info(f'User {{username}} can\'t be registered, we can\'t send registration letter. Exception: ' + str(e))
             return render(request, 'admin_register.html', context={"register_errors": "Can not send mail."})
         logger.info(f'User {{username}} is successfully registered')
         return render(request, 'admin_register.html', context={"success_message": "User is successfully added!"})

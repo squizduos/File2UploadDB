@@ -55,7 +55,14 @@ def prepare_and_upload_file(file_id):
             document.log += f"Step 2: Parsing file {document.file_type} is succeed: continue.\n"
             document.save()
         # Step 3: checking fields in table
-        all_contains, columns_in_table = check_table(document.db_type, conn, document.table_name, list(data[0].keys()))
+        try:
+            all_contains, columns_in_table = check_table(document.db_type, conn, document.table_name, list(data[0].keys()))
+        except Exception as e:
+            document.status = -1
+            document.error = "Error while cheching table; table is not exist or unavailable."
+            document.log += f"Step 3: Error while cheching table; table is not exist or unavailable: {str(e)}"
+            document.save()
+            return None
         if not all_contains:
             document.status = -1
             document.error = "Not all required fields are in table; please fix it"

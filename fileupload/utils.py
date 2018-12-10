@@ -76,6 +76,16 @@ def check_table(db_type, conn, table_name, columns):
     else:
         return False, column_names
 
+def convert_name_to_string(el):
+    return '"%s"' % str(el)
+
+def convert_type_to_string(el):
+    if isinstance(el, bool):
+        return '"true"' if el else '"false"'
+    elif isinstance(el, int):
+        return str(el)
+    else:
+        return '\'%s\'' % str(el)
 
 def write_row_to_db(db_type, conn, table_name, columns):
     column_names = []
@@ -85,7 +95,7 @@ def write_row_to_db(db_type, conn, table_name, columns):
         column_values.append(value)
     cursor = conn.cursor()
     if db_type == 'PostgreSQL':
-        sql = "INSERT INTO " + table_name + " (" + ','.join(column_names) + ") VALUES (" + ','.join(["%s" for key in column_values]) + ")"
+        sql = "INSERT INTO " + table_name + " (" + ','.join(column_names) + ") VALUES (" + ','.join([el for key in column_values]) + ")"
         try:
             cursor.execute(sql, column_values)
             conn.commit()
@@ -95,9 +105,13 @@ def write_row_to_db(db_type, conn, table_name, columns):
         else:
             return True, None, None
     elif db_type == 'Oracle':
-        sql = "INSERT INTO " + table_name + " (" + ','.join(column_names) + ") VALUES (" + ', '.join([":" + str(el) for el in column_names]) + ")"
+        sql = "INSERT INTO " + table_name + " (" + ','.join(
+            [convert_name_to_string(el) for el in column_names]
+        ) + ") VALUES (" + ', '.join(
+            [convert_type_to_string(el) for el in column_values]
+        ) + ")"
         try:
-            cursor.execute(sql, columns)
+            cursor.execute(sql)
             con.commit()
             cursor.close()
         except Exception as e:

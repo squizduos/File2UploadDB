@@ -47,8 +47,8 @@ def prepare_and_upload_file(file_id):
         )
         if not isinstance(data, list):
             document.status = -1
-            document.error = f"Unable to parse file; check format."
-            document.log += f"Step 2: Parsing file is failed: check file.\n"
+            document.error = f"Unable to parse file; check format, error {data}."
+            document.log += f"Step 2: Parsing file is failed: check file. Error {data}.\n"
             document.save()
             return None
         else:

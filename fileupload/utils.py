@@ -47,7 +47,7 @@ def parse_file(file_type, file, header_line, separator):
             data = data_frame.to_dict(orient='records')
             return data
         except Exception as e:
-            return None
+            return str(e)
     elif file_type == 'XLS' or file_type == 'XLSX':
         try:
             data_frame = pandas.read_excel(file, header=int(header_line))

@@ -1,7 +1,10 @@
 # main/tasks.py
- 
+import os
+
 import logging
 logger = logging.getLogger('admin_log')
+
+from django.conf import settings
 
 from imgdownloader.celery import app
 from .models import Document
@@ -38,7 +41,7 @@ def prepare_and_upload_file(file_id):
         # Step 2: parse file to dictonary
         data = parse_file(
             document.file_type, 
-            document.document.path,
+            os.path.join(settings.MEDIA_ROOT, document.document.path),
             document.file_header_line,
             document.file_separator
         )

@@ -41,7 +41,7 @@ def prepare_and_upload_file(file_id):
         # Step 2: parse file to dictonary
         data = parse_file(
             document.file_type, 
-            os.path.join(settings.MEDIA_ROOT, document.document.path),
+            document.document.path,
             document.file_header_line,
             document.file_separator
         )

@@ -15,6 +15,8 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import include, path
+from django.conf.urls.static import static
+from django.conf import settings
 from authentitcation.views import AdminRegisterView, RegisterView, LoginView, LogoutView
 from fileupload.views import DashboardView, AdminDashboardView, UploadToServerView, UploadToDBView, UploadToDBCheckStatusView
 
@@ -39,5 +41,5 @@ urlpatterns = [
         path('logout/', UploadToDBView.as_view(), name='api-login'),
         path('admin/register', UploadToDBView.as_view(), name='api-login'),
         path('register/', UploadToDBView.as_view(), name='api-login'),
-    ]))
+    ])),
 ]

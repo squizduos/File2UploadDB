@@ -24,9 +24,14 @@ services:
             - VIRTUAL_PORT=8000
             - LETSENCRYPT_HOST=img-test.squizduos.ru
             - LETSENCRYPT_EMAIL=squizduos@gmail.com
+        volumes:
+            - media_data:/code/media
     celery:
         build: .
         command: celery worker -l info -A imgdownloader
+        volumes:
+            - media_data:/code/media
+
     adminer:
         image: adminer
         restart: always
@@ -47,6 +52,7 @@ volumes:
   pgdata:
   ordata:
   redis_data:
+  media_data:
 
 networks:
   default:

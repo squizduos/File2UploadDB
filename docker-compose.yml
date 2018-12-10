@@ -43,6 +43,7 @@ services:
 volumes:
   pgdata:
   ordata:
+  redis_data:
 
 networks:
   default:

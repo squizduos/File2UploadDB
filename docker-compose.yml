@@ -27,12 +27,13 @@ services:
             - LETSENCRYPT_EMAIL=squizduos@gmail.com
         volumes:
             - media_data:/code/media
+            - log_data:/code/info.log
     celery:
         build: .
         command: celery worker -l info -A imgdownloader
         volumes:
             - media_data:/code/media
-
+            - log_data:/code/info.log
     adminer:
         image: adminer
         restart: always
@@ -54,6 +55,7 @@ volumes:
   ordata:
   redis_data:
   media_data:
+  log_data:
 
 networks:
   default:

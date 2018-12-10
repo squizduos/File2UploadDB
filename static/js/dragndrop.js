@@ -58,6 +58,8 @@ $(document).ready(function() {
     $('#agreeToRegulations').change(function() {
         if (this.checked) {
             $('#uploadFile').prop('disabled', false);
+        } else {
+            $('#uploadFile').prop('disabled', true);
         }
     });
 
@@ -226,4 +228,12 @@ $(document).ready(function() {
         }        
     }
     
+});
+
+
+$('body').on('click', function (e) {
+    if ($(e.target).data('toggle') !== 'popover'
+        && $(e.target).parents('.popover.in').length === 0) { 
+        $('[data-toggle="popover"]').popover('hide');
+    }
 });

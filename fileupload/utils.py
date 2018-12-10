@@ -85,7 +85,7 @@ def convert_type_to_string(el):
     elif isinstance(el, int):
         return str(el)
     else:
-        return '\'%s\'' % str(el.replace("\'", "\'\'"))
+        return '\'%s\'' % str(el).replace("\'", "\'\'")
 
 def write_row_to_db(db_type, conn, table_name, columns):
     column_names = []

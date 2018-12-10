@@ -24,7 +24,6 @@ services:
             - VIRTUAL_PORT=8000
             - LETSENCRYPT_HOST=img-test.squizduos.ru
             - LETSENCRYPT_EMAIL=squizduos@gmail.com
-        depends_on:
     adminer:
         image: adminer
         restart: always

@@ -135,7 +135,7 @@ PROJECT_DIR = os.path.dirname(os.path.abspath(__file__))
 
 STATIC_ROOT = os.path.join(PROJECT_DIR, 'production_static')
 
-DOMAIN = "ec2-18-191-152-229.us-east-2.compute.amazonaws.com"
+DOMAIN = "img-test.squizduos.ru"
 
 EMAIL_USE_TLS = True
 EMAIL_HOST = 'smtp.udag.de'

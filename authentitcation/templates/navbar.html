@@ -15,9 +15,9 @@
       <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
         <ul class="nav navbar-nav">
           {% if user.is_authenticated %}  
-                <li {% if request.path != "/dashboard/admin/" %} class="active" {% endif %}><a href="/dashboard">User space</a></li>
+                <li {% if request.path != "/dashboard/admin/" and request.path != "/signup/admin/register" %} class="active" {% endif %}><a href="/dashboard">User space</a></li>
             {% if user.is_superuser %}
-                <li {% if request.path == "/dashboard/admin/" %} class="active" {% endif %}><a href="/dashboard/admin">Admin space</a></li>
+                <li {% if request.path == "/dashboard/admin/" or request.path == "/signup/admin/register" %} class="active" {% endif %}><a href="/dashboard/admin">Admin space</a></li>
             {% endif %}
           {% endif %}
         </ul>

@@ -59,7 +59,9 @@ $(document).ready(function() {
         if (this.checked) {
             $('#uploadFile').prop('disabled', false);
         } else {
-            $('#uploadFile').prop('disabled', true);
+            if ($("#uploadFile").text() != "Remove") {
+                $('#uploadFile').prop('disabled', true);
+            }
         }
     });
 
@@ -124,6 +126,33 @@ $(document).ready(function() {
         }
     }
 
+    $('#file_type').on('change', function() {
+        if ($("#uploadFile").text() == "Remove") {        
+            if($(this).find(":selected").val() == 'CSV') {
+                $('#file_header_line').val('');
+                $('#file_header_line').prop('disabled', false);
+                $('#file_separator').val('');
+                $('#file_separator').prop('disabled', false);
+            } else if ($(this).find(":selected").val() == 'XLS') {
+                $('#file_header_line').val('');
+                $('#file_header_line').prop('disabled', false);
+                $('#file_separator').val('not applicable');
+                $('#file_separator').prop('disabled', true);
+            } else if ($(this).find(":selected").val() == 'XLSX') {
+                $('#file_header_line').val('');
+                $('#file_header_line').prop('disabled', false);
+                $('#file_separator').val('not applicable');
+                $('#file_separator').prop('disabled', true);
+
+            } else if ($(this).find(":selected").val() == 'DTA') {
+                $('#file_header_line').val('not applicable');
+                $('#file_header_line').prop('disabled', true);
+                $('#file_separator').val('not applicable');
+                $('#file_separator').prop('disabled', true);
+            }
+        }
+    });
+    
     // При выборе PostgreSQL лочится SID
     $('#db_type').on("change", function() {
         if($(this).find(":selected").val() == 'PostgreSQL') {

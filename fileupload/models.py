@@ -27,5 +27,5 @@ class Document(models.Model):
     db_name = models.CharField(max_length=100, blank=True)
     status = models.IntegerField(choices=DOCUMENT_STATUS, default=0)
     uploading_percent = models.IntegerField(default=0)
-    error = models.CharField(max_length=100000, default="", blank=True)
+    error = models.CharField(max_length=100000, default="", blank=True, null=True)
     log = models.TextField(default="", blank=True)

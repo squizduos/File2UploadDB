@@ -92,7 +92,7 @@ def prepare_and_upload_file(file_id):
         document.document = None
         document.save()
         return None
-    except Exception as e:
+    except Exception as err:
         document.status = -1
         document.error = err
         document.save()

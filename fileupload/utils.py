@@ -1,9 +1,8 @@
 import subprocess
 
-import psycopg2
-import cx_Oracle
-
 import pandas
+
+from sqlalchemy import create_engine, types
 
 import logging
 logger = logging.getLogger('admin_log')
@@ -17,23 +16,16 @@ def file_read_from_tail(fname, lines):
 
 def connect_to_db(db_type, host, port, database, user, password, sid=None):
     if db_type == 'PostgreSQL':
-        params = {
-            'host': host,
-            'port': port,
-            'database': database,
-            'user': user,
-            'password': password
-        }
         try:
-            conn = psycopg2.connect(**params)
+            connection_string = "postgresql://{uname}:{pw}@{ip}:{port}/{db}".format(uname=user, pw=password, ip=host, port=port, db=database)
+            conn = create_engine(connection_string)
             return conn, None
         except Exception as e:
             return None, str(e)
     elif db_type == 'Oracle':
-        # conn_str = f'{user}/{password}@{host}:{port}/{database}'
         try:
-            dsn_tns = cx_Oracle.makedsn(host, port, sid)
-            conn = cx_Oracle.connect(user, password, dsn_tns)
+            connection_string = 'oracle+cx_oracle://{uname}:{pw}@{ip}:{port}/{SID}'.format(uname=user, pw=password, ip=host, port=port, db=database)
+            conn = create_engine(connection_string)
             return conn, None
         except Exception as e:
             return None, str(e)
@@ -44,8 +36,8 @@ def parse_file(file_type, file, header_line, separator):
     if file_type == 'CSV':
         try:
             data_frame = pandas.read_csv(file, sep=separator, header=int(header_line))
-            data = data_frame.to_dict(orient='records')
-            return data
+            # data = data_frame.to_dict(orient='records')
+            return data_frame
         except Exception as e:
             return str(e)
     elif file_type == 'XLS' or file_type == 'XLSX':
@@ -53,12 +45,14 @@ def parse_file(file_type, file, header_line, separator):
             data_frame = pandas.read_excel(file, header=int(header_line))
             indexes_for_drop = [val for val in data_frame.columns if 'Unnamed' in val]
             data_frame = data_frame.drop(indexes_for_drop, axis=1)
-            data = data_frame.to_dict(orient='records')
-            return data
+            # data = data_frame.to_dict(orient='records')
+            return data_frame
         except Exception as e:
             return None    
     elif file_type == 'DAT':
-        return None
+        data_frame = pandas.read_stata(file)
+        # data = data_frame.to_dict(orient='records')
+        return data_frame
 
 def check_table(db_type, conn, table_name, columns):
     cursor = conn.cursor()
@@ -87,7 +81,7 @@ def convert_type_to_string(el):
     else:
         return '\'%s\'' % str(el).replace("\'", "\'\'")
 
-def write_row_to_db(db_type, conn, table_name, columns):
+def write_row_to_db(db_type, conn, table_name, data):
     column_names = []
     column_values = []
     for key, value in columns.items():
@@ -95,27 +89,20 @@ def write_row_to_db(db_type, conn, table_name, columns):
         column_values.append(value)
     cursor = conn.cursor()
     if db_type == 'PostgreSQL':
-        sql = "INSERT INTO " + table_name + " (" + ','.join(column_names) + ") VALUES (" + ','.join([str(key) for key in column_values]) + ")"
         try:
-            cursor.execute(sql, column_values)
-            conn.commit()
-            cursor.close()
+            data.to_sql(table_name, conn, chunksize=5000, if_exists='replace')
         except Exception as e:
-            return False, str(e), sql
+            return False, str(e), ""
         else:
             return True, None, None
     elif db_type == 'Oracle':
-        sql = "INSERT INTO " + table_name + " (" + ','.join(
-            [convert_name_to_string(el) for el in column_names]
-        ) + ") VALUES (" + ', '.join(
-            [convert_type_to_string(el) for el in column_values]
-        ) + ")"
         try:
-            cursor.execute(sql)
-            conn.commit()
-            cursor.close()
+            ntyp = {d: types.VARCHAR(310) for d in data.columns[df.isnull().all()].tolist()}
+            to_vc = {c: types.VARCHAR(300) for c in data.columns[df.dtypes == 'object'].tolist()}
+            update_dicts = ntyp.update(to_vc)
+            data.to_sql(table_name, conn, chunksize=5000, if_exists='replace', dtype=ntyp)
         except Exception as e:
-            return False, str(e), sql
+            return False, str(e), ""
         else:
             return True, None, None
     else:

@@ -1,5 +1,6 @@
 # main/tasks.py
 import os
+import traceback
 
 import logging
 logger = logging.getLogger('admin_log')
@@ -94,6 +95,6 @@ def prepare_and_upload_file(file_id):
         return None
     except Exception as err:
         document.status = -1
-        document.error = err
+        document.error = traceback.format_exc()
         document.save()
         return None

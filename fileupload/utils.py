@@ -95,7 +95,7 @@ def write_row_to_db(db_type, conn, table_name, columns):
         column_values.append(value)
     cursor = conn.cursor()
     if db_type == 'PostgreSQL':
-        sql = "INSERT INTO " + table_name + " (" + ','.join(column_names) + ") VALUES (" + ','.join([el for key in column_values]) + ")"
+        sql = "INSERT INTO " + table_name + " (" + ','.join(column_names) + ") VALUES (" + ','.join([key for key in column_values]) + ")"
         try:
             cursor.execute(sql, column_values)
             conn.commit()

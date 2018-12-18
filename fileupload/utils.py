@@ -24,7 +24,7 @@ def connect_to_db(db_type, host, port, database, user, password, sid=None):
             return None, str(e)
     elif db_type == 'Oracle':
         try:
-            connection_string = 'oracle+cx_oracle://{uname}:{pw}@{ip}:{port}/{SID}'.format(uname=user, pw=password, ip=host, port=port, db=database)
+            connection_string = 'oracle+cx_oracle://{uname}:{pw}@{ip}:{port}/{SID}'.format(uname=user, pw=password, ip=host, port=port, SID=sid)
             conn = create_engine(connection_string)
             return conn, None
         except Exception as e:

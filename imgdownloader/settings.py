@@ -148,8 +148,8 @@ LOGGING = {
     'disable_existing_loggers': False,
     'formatters': {
         'verbose': {
-            'format': '{levelname} {asctime} {module} {process:d} {thread:d} {message}',
-            'style': '{',
+            'format' : "[%(asctime)s] %(message)s",
+            'datefmt' : "%d/%b/%Y %H:%M:%S"
         },
         'simple': {
             'format': '{levelname} {message}',
@@ -162,6 +162,7 @@ LOGGING = {
             'level': 'INFO',
             'class': 'logging.FileHandler',
             'filename': 'log/info.log',
+            'formatter': 'verbose'
         },
         'debug': {
             'level': 'DEBUG',

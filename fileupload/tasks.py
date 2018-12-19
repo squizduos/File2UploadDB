@@ -48,6 +48,7 @@ def prepare_and_upload_file(file_id):
         document.file_separator
     )
     if not isinstance(data, pandas.core.frame.DataFrame):
+        logger.info(f'File {document.id}, was not succesfully uploaded; error while parsing.')
         document.status = -1
         document.error = f"Unable to parse file; check format, error {data}."
         document.log += f"Step 2: Parsing file is failed: check file. Error {data}.\n"
@@ -59,12 +60,13 @@ def prepare_and_upload_file(file_id):
     # Step 4: write all to table
     status, err, sql = write_row_to_db(document.db_type, conn, document.table_name, data)
     if not status:
+        logger.info(f'File {document.id}, was not succesfully uploaded; error while inserting to DBMS, sql {sql}, err {err}.')
         document.status = -1
         document.error = err
         document.log += f"Step 3: Inserting row '{sql}' error {err}.\n"
         document.save()
         return None
-
+    logger.info(f'File {document.id}, was succesfully uploaded to DBMS!')
     document.log += f"Step 3: Inserting rows succeed!.\n"
     document.status = 2
     document.document = None

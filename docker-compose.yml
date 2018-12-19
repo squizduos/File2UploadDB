@@ -13,8 +13,6 @@ services:
         environment:
             - ORACLE_ALLOW_REMOTE=true
             - ORACLE_ENABLE_XDB=true
-        volumes:
-            - ordata:/u01/app/oracle/oradata/XE/
     web:
         build: .
         command: bash docker-entrypoint.sh

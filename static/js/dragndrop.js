@@ -277,7 +277,7 @@ $(document).ready(function() {
     // Очистка путей в файле
     $("#clearAll").click(function (event){
         event.preventDefault();
-        document.window.reload(false);
+        window.location.reload(false);
     });
     // Очистка путей в файле
     $("#addNew").click(function (event){
@@ -291,10 +291,11 @@ $(document).ready(function() {
         $('#workProgressBar').prop('style', 'width: 75%');
         $('#uploadProgressBar').removeClass("progress-bar-success");
         $('#uploadProgressBar').prop('aria-valuenow', 0);
-        $('#uploadProgressBar').prop('style', 'width: 75%');
+        $('#progessBarDiv').prop('style', 'display: none');
         $('#uploadFile').html('+ select file');
-        $('#uploadFile').prop('class', 'btn btn-lg');   
+        $('#uploadFile').prop('class', 'btn btn-lg btn-primary btn-file');   
         $('#uploadButtonProgress').html('');
+        $('#selectedFile').html('');
     });
 });
 

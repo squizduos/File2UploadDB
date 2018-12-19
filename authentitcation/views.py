@@ -106,4 +106,5 @@ class LogoutView(LoginRequiredMixin, View):
     login_url = "/login/"
     def get(self, request):
         logout(request)
+        logger.info(f'User {request.user.username} successfully logged out')
         return redirect('dashboard')

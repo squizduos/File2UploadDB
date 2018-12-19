@@ -294,6 +294,8 @@ $(document).ready(function() {
         $('#progessBarDiv').prop('style', 'display: none');
         $('#uploadFile').html('+ select file');
         $('#uploadFile').prop('class', 'btn btn-lg btn-primary btn-file');   
+        $('#uploadButtonDiv').prop('class', "col-lg-12");
+        $('#uploadFile').prop('style', "width: 20%");
         $('#uploadButtonProgress').html('');
         $('#selectedFile').html('');
     });

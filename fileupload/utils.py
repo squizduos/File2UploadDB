@@ -80,7 +80,7 @@ def write_row_to_db(db_type, conn, table_name, data):
             ntyp = {d: types.VARCHAR(310) for d in data.columns[data.isnull().all()].tolist()}
             to_vc = {c: types.VARCHAR(300) for c in data.columns[data.dtypes == 'object'].tolist()}
             update_dicts = ntyp.update(to_vc)
-            data.to_sql(table_name, conn, chunksize=5000, if_exists='append', dtype=ntyp)
+            data.to_sql(table_name, conn, chunksize=10, if_exists='append', dtype=ntyp)
         except Exception as e:
             return False, str(e), ""
         else:

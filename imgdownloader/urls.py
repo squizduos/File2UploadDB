@@ -18,7 +18,7 @@ from django.urls import include, path
 from django.conf.urls.static import static
 from django.conf import settings
 from authentitcation.views import AdminRegisterView, RegisterView, LoginView, LogoutView
-from fileupload.views import DashboardView, AdminDashboardView, UploadToServerView, UploadToDBView, UploadToDBCheckStatusView
+from fileupload.views import DashboardView, AdminDashboardView, UploadToServerView, UploadToDBView, UploadToDBCheckStatusView, UploadToServerCancelView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -37,6 +37,7 @@ urlpatterns = [
         path('upload/', UploadToServerView.as_view(), name='api-upload'),
         path('work/start', UploadToDBView.as_view(), name="api-start-work"),
         path('work/check/<file_id>', UploadToDBCheckStatusView.as_view(), name='api-check-work'),
+        path('work/cancel/<file_id>', UploadToServerCancelView.as_view(), name='api-check-work'),
         path('login/', UploadToDBView.as_view(), name='api-login'),
         path('logout/', UploadToDBView.as_view(), name='api-login'),
         path('admin/register', UploadToDBView.as_view(), name='api-login'),

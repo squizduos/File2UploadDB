@@ -11,7 +11,7 @@ import pandas
 
 from imgdownloader.celery import app
 from .models import Document
-from .utils import connect_to_db, parse_file, check_table, write_row_to_db
+from .utils import connect_to_db, parse_file, write_row_to_db
  
 @app.task
 def prepare_and_upload_file(file_id):

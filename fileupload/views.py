@@ -41,7 +41,7 @@ class AdminDashboardView(UserPassesTestMixin, View):
 
     login_url = "/login/"
     def get(self, request):
-        log = file_read_from_tail('info.log', 10000)
+        log = file_read_from_tail('log/info.log', 10000)
         return render(request, 'admin-dashboard.html', context={'log': log})
 
 
@@ -139,3 +139,20 @@ class UploadToDBCheckStatusView(LoginRequiredMixin, View):
         if document.status == -1:
             return JsonResponse({"status": -1, "error": document.error})
             
+@method_decorator(csrf_exempt, name='dispatch')
+class UploadToServerCancelView(LoginRequiredMixin, View):
+    login_url = "/login/"
+    
+    def get(self, request, file_id):
+        try:
+            document = Document.objects.get(id=file_id)
+        except Exception as e:
+            logger.info(f'File checking status #{file_id} by user {request.user.username} error; file not found')
+            return JsonResponse({"error": "File not found, error: " + str(e)}, status=404)
+        try:
+            document.delete()
+            logger.info(f'File upload #{file_id} cancelled by user {request.user.username}')
+            return JsonResponse({"error": "File deleted successfully"}, status=200)
+        except Exception as e:
+            logger.info(f'File upload #{file_id} cancelling by user {request.user.username} error {str(e)}')
+            return JsonResponse({"error": str(e)}, status=400)

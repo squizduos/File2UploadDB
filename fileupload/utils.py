@@ -55,21 +55,6 @@ def parse_file(file_type, file, header_line, separator):
         # data = data_frame.to_dict(orient='records')
         return data_frame
 
-def check_table(db_type, conn, table_name, columns):
-    cursor = conn.cursor()
-    if db_type == 'PostgreSQL':
-        cursor.execute(f"select column_name from information_schema.columns where table_schema = 'public' and table_name='{table_name}'")
-        column_names = [row[0] for row in cursor]
-    elif db_type == 'Oracle':
-        r = cursor.execute(f"select * from {table_name}")
-        column_names = [row[0] for row in cursor.description]
-    else:
-        column_names = []
-    cursor.close()
-    if all(elem in column_names for elem in columns):
-        return True, []
-    else:
-        return False, column_names
 
 def convert_name_to_string(el):
     return '"%s"' % str(el)
@@ -95,7 +80,7 @@ def write_row_to_db(db_type, conn, table_name, data):
             ntyp = {d: types.VARCHAR(310) for d in data.columns[data.isnull().all()].tolist()}
             to_vc = {c: types.VARCHAR(300) for c in data.columns[data.dtypes == 'object'].tolist()}
             update_dicts = ntyp.update(to_vc)
-            data.to_sql(table_name, conn, chunksize=5000, if_exists='replace', dtype=ntyp)
+            data.to_sql(table_name, conn, chunksize=5000, if_exists='append', dtype=ntyp)
         except Exception as e:
             return False, str(e), ""
         else:

@@ -108,7 +108,10 @@ $(document).ready(function() {
                         $('#'+value).prop('disabled', false);
                       });                
                     selectedFile.text('File is successfully uploaded!');
-                    $('#uploadFile').prop('onClick', "function(e) {window.location.reload(false)}");
+                    $('#uploadFile').on('click', function(e) {
+                        e.preventDefault();
+                        clearFile(event);
+                    });
                     $('#uploadFile').html('Remove');
                     $('#uploadFile').prop('class', 'btn btn-danger btn-lg');    
                 } else {
@@ -188,6 +191,19 @@ $(document).ready(function() {
         event.preventDefault();
         workWithFile(event);
     });
+
+    function clearFile(event) {
+        var file_id = $('[id=file_id]')[0].value;
+        var request = $.ajax({
+            dataType: 'json',
+            url: "/api/work/cancel/"+file_id,
+            type: "GET",
+            error: workWithFileShowError,
+        }); 
+        request.done(function(msg) {
+            window.location.reload(false);
+        })
+    }
     
     function workWithFile(event) {
         var form_data = {};
@@ -257,6 +273,14 @@ $(document).ready(function() {
         }        
     }
     
+    // Очистка путей в файле
+    $("#clearAll").click(function (event){
+        event.preventDefault();
+        $('[id*="db_"],[id*="file_"],[id*="table_"]').each(function() {
+            $(this).val('')
+        });
+    });
+
 });
 
 

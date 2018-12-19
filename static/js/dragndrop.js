@@ -241,7 +241,8 @@ $(document).ready(function() {
         $('#workProgessBar').addClass("progress-bar-success");
         $('#workProgessBar').prop('aria-valuenow', 100);
         $('#workProgessBar').prop('style', 'width: 100%');
-        $('#workProgessBarStatus').html('Uploaded successfully!');            
+        $('#workProgessBarStatus').html('Uploaded successfully!');  
+        $('#afterUploadToDB').prop('style', 'display: block');          
     }
 
     function workWithFileCheckStatus(file_id) {
@@ -276,11 +277,25 @@ $(document).ready(function() {
     // Очистка путей в файле
     $("#clearAll").click(function (event){
         event.preventDefault();
-        $('[id*="db_"],[id*="file_"],[id*="table_"]').each(function() {
-            $(this).val('')
-        });
+        document.window.reload(false);
     });
-
+    // Очистка путей в файле
+    $("#addNew").click(function (event){
+        event.preventDefault();
+        $('[id*="file_"]').each(function() {
+            $(this).val('');
+        });
+        $('#workProgessBarStatus').html("");                
+        $('#workProgressBar').removeClass("progress-bar-success");
+        $('#workProgressBar').prop('aria-valuenow', 0);
+        $('#workProgressBar').prop('style', 'width: 75%');
+        $('#uploadProgressBar').removeClass("progress-bar-success");
+        $('#uploadProgressBar').prop('aria-valuenow', 0);
+        $('#uploadProgressBar').prop('style', 'width: 75%');
+        $('#uploadFile').html('+ select file');
+        $('#uploadFile').prop('class', 'btn btn-lg');   
+        $('#uploadButtonProgress').html('');
+    });
 });
 
 

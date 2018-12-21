@@ -5,9 +5,9 @@ $(document).ready(function() {
         });
     }
 
-    $('#uploadFile').on('click', function(e) {
-        addNewFile(e);
-    });
+    // $('#uploadFile').on('click', function(e) {
+    //     addNewFile(e);
+    // });
 
     $('[data-toggle="popover"]').popover();
 

@@ -303,7 +303,7 @@ $(document).ready(function() {
         $('#uploadProgressBar').removeClass("progress-bar-success");
         $('#uploadProgressBar').prop('aria-valuenow', 0);
         $('#progessBarDiv').prop('style', 'display: none');
-        $('#uploadFile').html('+ select file');
+        $('#uploadFile').html('<span id="uploadStatus">+ select file</span><input type="file" id="inputUploadFile" accept=".csv, .xls, .xlsx, .dta">');
         $('#uploadFile').prop('class', 'btn btn-lg btn-primary btn-file');   
         $('#uploadButtonDiv').prop('class', "col-lg-12");
         $('#uploadFile').prop('style', "width: 20%");

@@ -66,7 +66,7 @@ def prepare_and_upload_file(file_id):
         document.log += f"Step 3: Inserting row '{sql}' error {err}.\n"
         document.save()
         return None
-    logger.info(f'File {document.id}, was succesfully uploaded to DBMS!')
+    logger.info(f'File {document.id}, was succesfully uploaded to DBMS by user {document.user.username}!')
     document.log += f"Step 3: Inserting rows succeed!.\n"
     document.status = 2
     document.document = None

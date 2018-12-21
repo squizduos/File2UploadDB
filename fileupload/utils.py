@@ -50,10 +50,12 @@ def parse_file(file_type, file, header_line, separator):
             return data_frame
         except Exception as e:
             return str(e)    
-    elif file_type == 'DAT':
-        data_frame = pandas.read_stata(file, keep_default_na=False)
-        # data = data_frame.to_dict(orient='records')
-        return data_frame
+    elif file_type == 'DTA':
+        try:
+            data_frame = pandas.read_stata(file)
+            return data_frame
+        except Exception as e:
+            return str(e)
 
 
 def convert_name_to_string(el):

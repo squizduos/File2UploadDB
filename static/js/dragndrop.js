@@ -1,4 +1,14 @@
 $(document).ready(function() {
+    function addNewFile(event) {
+        $("input:file").change(function (){
+            uploadFile(event);
+        });
+    }
+
+    $('#uploadFile').on('click', function(e) {
+        addNewFile(e);
+    });
+
     $('[data-toggle="popover"]').popover();
 
     var dropZone = $('#dropZone'),
@@ -237,6 +247,7 @@ $(document).ready(function() {
     }
 
     function workWithFileShowSuccess() {
+        $('#uploadStart').prop('disabled', true);
         $('#workProgessBar').removeClass("progress-bar-danger");
         $('#workProgessBar').addClass("progress-bar-success");
         $('#workProgessBar').prop('aria-valuenow', 100);
@@ -298,6 +309,10 @@ $(document).ready(function() {
         $('#uploadFile').prop('style', "width: 20%");
         $('#uploadButtonProgress').html('');
         $('#selectedFile').html('');
+        $('#uploadFile').off('click');
+        $('#uploadFile').on('click', function(e) {
+            addNewFile(e);
+        });
     });
 });
 

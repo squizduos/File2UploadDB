@@ -7,6 +7,7 @@ from sqlalchemy import create_engine, types
 import logging
 logger = logging.getLogger('admin_log')
 
+import traceback
 
 def file_read_from_tail(fname, lines):
     proc = subprocess.Popen(['tail', str(-1*lines), fname], stdout=subprocess.PIPE)
@@ -84,7 +85,7 @@ def write_row_to_db(db_type, conn, table_name, data):
             update_dicts = ntyp.update(to_vc)
             data.to_sql(table_name, conn, chunksize=10, if_exists='append', dtype=ntyp)
         except Exception as e:
-            return False, str(e), ""
+            return False, str(e), traceback.format_exc()
         else:
             return True, None, None
     else:

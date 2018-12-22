@@ -59,14 +59,14 @@ class AdminRegisterView(UserPassesTestMixin, View):
         try:
             user = User.objects.create_user(username=username, email=email)
         except Exception as e:
-            logger.info(f'User {{username}} can\'t be registered, already exist or have incorrect data')
+            logger.info(f'User {username} can\'t be registered, already exist or have incorrect data')
             return render(request, 'admin_register.html', context={"register_errors": "This user is already exist or have incorrect data."})
         try:
             send_registration_email.delay(user.id)
         except Exception as e:
-            logger.info(f'User {{username}} can\'t be registered, we can\'t send registration letter. Exception: ' + str(e))
+            logger.info(f'User {username} can\'t be registered, we can\'t send registration letter. Exception: ' + str(e))
             return render(request, 'admin_register.html', context={"register_errors": "Can not send mail."})
-        logger.info(f'User {{username}} is successfully registered')
+        logger.info(f'User {username} is successfully registered')
         return render(request, 'admin_register.html', context={"success_message": "User is successfully added!"})
 
 @method_decorator(csrf_exempt, name='dispatch')
@@ -75,7 +75,7 @@ class RegisterView(View):
         try:
             user = User.objects.get(login_hash=login_hash)
         except:
-            logger.info(f'User {{username}} is trying to register second time, error')
+            logger.info(f'User {username} is trying to register second time, error')
             return render(request, 'login.html', context={"login_errors": "User was registered successfully; please login using login and password"})
         return render(request, 'register.html', context={'user': user})
 
@@ -89,11 +89,11 @@ class RegisterView(View):
         try:
             user = User.objects.get(login_hash=login_hash)
         except:
-            logger.info(f'User {{username}} is trying to register second time, error')
+            logger.info(f'User with login hash {login_hash} does not exist.')
             return render(request, 'login.html', context={"login_errors": "User was registered successfully; please login using login and password"})
         if password != confirm_password:
             return render(request, 'register.html', context={"register_errors": "Password and password confirmation are not match", "user": user})
-        logger.info(f'User {{user.username}} password is successfully set')
+        logger.info(f'User {user.username} password is successfully set')
         user.set_password(password)
         user.login_hash = ''
         user.save()

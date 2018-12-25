@@ -1,29 +1,23 @@
-import logging
-logger = logging.getLogger('admin_log')
-
 import os
 import json
 
+from django.views.generic import View
+
 from django.shortcuts import render
-
-# Create your views here.
-
-from django.views.generic import TemplateView, View
-
-from django.contrib.auth import login, authenticate
-from django.contrib.auth.forms import UserCreationForm
-from django.contrib.auth.decorators import login_required
-from django.shortcuts import render, redirect
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
-from django.http import HttpResponse, JsonResponse
+from django.http import JsonResponse
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
-from django.forms.models import model_to_dict
 
 from .forms import DocumentUpdateForm, DocumentUploadForm
 from .models import Document
 from .utils import file_read_from_tail
-from .tasks import prepare_and_upload_file
+from .tasks import DocumentTask
+
+from celery.result import AsyncResult
+
+import logging
+logger = logging.getLogger('admin_log')
 
 
 @method_decorator(csrf_exempt, name='dispatch')
@@ -40,6 +34,7 @@ class AdminDashboardView(UserPassesTestMixin, View):
         return self.request.user.is_superuser
 
     login_url = "/login/"
+
     def get(self, request):
         log = file_read_from_tail('log/info.log', 10000)
         return render(request, 'admin-dashboard.html', context={'log': log})
@@ -48,7 +43,7 @@ class AdminDashboardView(UserPassesTestMixin, View):
 @method_decorator(csrf_exempt, name='dispatch')
 class UploadToServerView(LoginRequiredMixin, View):
     login_url = "/login/"
-    
+
     def prepare_uploaded_file(self, model):
         response = {'file_id': model.id, 'file_storage': model.file_storage, 'enabled_for_editing': ['file_type']}
         response['file_path'] = model.document.path
@@ -84,7 +79,7 @@ class UploadToServerView(LoginRequiredMixin, View):
                 response['db_sid'] = last_successful_load.db_sid
                 response['enabled_for_editing'].append("db_sid")
         return response
-    
+
     def post(self, request):
         form = DocumentUploadForm(request.POST, request.FILES)
         if form.is_valid():
@@ -92,7 +87,9 @@ class UploadToServerView(LoginRequiredMixin, View):
             model.user = request.user
             model.original_filename = request.FILES['document'].name
             model.save()
-            logger.info(f'New file {model.id} is successfully uploaded by user {request.user.username} and preparing to upload to DBMS')
+            logger.info(
+                f'File {model.id} is successfully uploaded by user {model.user.username} and preparing to load on DBMS'
+            )
             return JsonResponse(self.prepare_uploaded_file(model))
         else:
             logger.info(f'File uploading by user {request.user.username} error')
@@ -122,7 +119,11 @@ class UploadToDBView(LoginRequiredMixin, View):
             model = form.save(commit=False)
             model.user = request.user
             model.save()
-            prepare_and_upload_file.delay(model.id)
+            # Running task
+            new_task = DocumentTask()
+            task_run = new_task.delay(model.id)
+            model.task_id = task_run.task_id
+            model.save()
             logger.info(f'File {model.id} uploading to DBMS is started by {request.user.username}')
             return JsonResponse({"status": "uploading"})
         else:
@@ -131,7 +132,7 @@ class UploadToDBView(LoginRequiredMixin, View):
 
 
 @method_decorator(csrf_exempt, name='dispatch')
-class UploadToDBCheckStatusView(LoginRequiredMixin, View):
+class UploadedFileView(LoginRequiredMixin, View):
     login_url = "/login/"
     
     def get(self, request, file_id):
@@ -139,21 +140,13 @@ class UploadToDBCheckStatusView(LoginRequiredMixin, View):
             document = Document.objects.get(id=file_id)
         except Exception as e:
             logger.info(f'File checking status #{data["file_id"]} by user {request.user.username} error; file not found')
-            return JsonResponse({"error": "File not found"}, status=404)
-        if document.status == 0:
-            return JsonResponse({"status": 0, "percent": 0})
-        if document.status == 1:
-            return JsonResponse({"status": 1, "percent": document.uploading_percent})
-        if document.status == 2:
-            return JsonResponse({"status": 2, "percent": 100})
-        if document.status == -1:
-            return JsonResponse({"status": -1, "error": document.error})
-            
-@method_decorator(csrf_exempt, name='dispatch')
-class UploadToServerCancelView(LoginRequiredMixin, View):
-    login_url = "/login/"
-    
-    def get(self, request, file_id):
+            return JsonResponse({"status": -1, "error": "File not found"}, status=404)
+        info = AsyncResult(document.task_id).info
+        response = {"status": document.status}
+        if info: response.update(**info)
+        return JsonResponse(response)
+
+    def delete(self, request, file_id):
         try:
             document = Document.objects.get(id=file_id)
         except Exception as e:
@@ -166,3 +159,5 @@ class UploadToServerCancelView(LoginRequiredMixin, View):
         except Exception as e:
             logger.info(f'File upload #{file_id} cancelling by user {request.user.username} error {str(e)}')
             return JsonResponse({"error": str(e)}, status=400)
+
+

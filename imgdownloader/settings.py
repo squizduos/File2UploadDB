@@ -201,3 +201,5 @@ CELERY_RESULT_BACKEND = 'redis://' + REDIS_HOST + ':' + REDIS_PORT + '/0'
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media/')
 
+# CELERY_ALWAYS_EAGER = True
+# TEST_RUNNER = 'djcelery.contrib.test_runner.CeleryTestSuiteRunner'

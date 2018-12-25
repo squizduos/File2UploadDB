@@ -55,7 +55,7 @@ class UploadToServerView(LoginRequiredMixin, View):
         response['file_name'] = os.path.basename(model.document.name)
         filename, extension = os.path.splitext(model.original_filename)
         if extension.upper() in ['.CSV', '.XLS', '.XLSX', '.DTA']:
-            response['file_type'] = extension.upper()
+            response['file_type'] = extension.upper()[1:]
         else:
             response['file_type'] = 'CSV'
         if response['file_type'] == 'CSV':

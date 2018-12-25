@@ -68,7 +68,9 @@ $(document).ready(function() {
     $('#agreeToRegulations').change(function() {
         if (this.checked) {
             $('#uploadFile').prop('disabled', false);
+            $('#uploadStart').prop('disabled', false);
         } else {
+            $('#uploadStart').prop('disabled', true);
             if ($("#uploadFile").text() != "Remove") {
                 $('#uploadFile').prop('disabled', true);
             }
@@ -187,12 +189,12 @@ $(document).ready(function() {
         return isValid;
       }
       
-    // Разблокировка при заполнении всех полей
-    $('[id*="db_"],[id*="file_"],[id*="table_"]').on("change keyup paste", function() {
-        if(validateForm()) {
-            $('#uploadStart').prop('disabled', false);
-        }
-    });
+    // // Разблокировка при заполнении всех полей
+    // $('[id*="db_"],[id*="file_"],[id*="table_"]').on("change keyup paste", function() {
+    //     if(validateForm()) {
+    //         $('#uploadStart').prop('disabled', false);
+    //     }
+    // });
 
     var working = false;
 
@@ -216,26 +218,46 @@ $(document).ready(function() {
     }
     
     function workWithFile(event) {
-        var form_data = {};
-        data = $('[id*="db_"],[id*="file_"],[id*="table_"]');
-        for (i = 0; i < data.length; i++) {
-            form_data[data[i].id] = data[i].value;
+        var validateRules = {
+            highlight: function(element) {
+                $(element).parent().addClass("has-error");
+            },
+            unhighlight: function(element) {
+                $(element).parent().removeClass("has-error");
+            },
+            errorPlacement: function(error, element) {
+                return false;
+            },                      
+            debug: true,
+            ignore: ".absoulte-random-class"
+        };
+        $("#file-info-form").validate(validateRules);
+        $("#table-info-form").validate(validateRules);
+        $("#db-info-form").validate(validateRules);
+        if ($("#file-info-form").valid() &&  $("#table-info-form").valid() && $("#db-info-form").valid()) {
+            var form_data = {};
+            data = $('[id*="db_"],[id*="file_"],[id*="table_"]');
+            for (i = 0; i < data.length; i++) {
+                form_data[data[i].id] = data[i].value;
+            }
+            $('#workProgessBarDiv').prop('style', "display: block");
+            var request = $.ajax({
+                dataType: 'json',
+                url: "/api/work/start",
+                data: JSON.stringify(form_data),
+                type: "POST",
+                error: workWithFileShowError,
+            }); 
+            request.done(function(msg) {
+                working = true;
+                workWithFileCheckStatus(form_data['file_id']);
+            })
+            request.fail(function(jqXHR, textStatus) {
+                workWithFileShowError(textStatus);
+            })         
+        } else {
+
         }
-        $('#workProgessBarDiv').prop('style', "display: block");
-        var request = $.ajax({
-            dataType: 'json',
-            url: "/api/work/start",
-            data: JSON.stringify(form_data),
-            type: "POST",
-            error: workWithFileShowError,
-        }); 
-        request.done(function(msg) {
-            working = true;
-            workWithFileCheckStatus(form_data['file_id']);
-        })
-        request.fail(function(jqXHR, textStatus) {
-            workWithFileShowError(textStatus);
-        })         
     }
 
     function workWithFileShowError(error) {

@@ -3,22 +3,22 @@
         <h3>File</h3>
         <hr>
         <form id="file-info-form" role="form" style="display: block;">
-            <input type="hidden" id="file_id" disabled>                        
+            <input type="hidden" id="file_id" name="file_id" disabled>                        
             <div class="form-group">
                 <label for="file_path">path:</label>
-                <input type="input" class="form-control" id="file_path" disabled>
+                <input class="form-control" id="file_path" name="file_path" disabled required minlength="1" type="text">
             </div>
             <div class="form-group">
                 <label for="file_name">name:</label>
-                <input type="input" class="form-control" id="file_name" disabled>
+                <input class="form-control" id="file_name" name="file_name" disabled required minlength="1" type="text">
             </div>
             <div class="form-group">
                 <label for="file_storage">storage:</label>
-                <input type="input" class="form-control" id="file_storage" disabled>
+                <input class="form-control" id="file_storage" name="file_storage" disabled required minlength="" type="text">
             </div>
             <div class="form-group">
                 <label for="file_type">file type:</label>
-                <select class="form-control" id="file_type" disabled>
+                <select class="form-control" id="file_type" name="file_type" disabled required>
                     <option>CSV</option>
                     <option>XLS</option>
                     <option>XLSX</option>
@@ -28,12 +28,12 @@
             <div class="form-group">
                 <label for="file_header_line">header line:</label>
                 <i class="fa fa-info-circle" data-toggle="popover" title="Header line" data-content="Row number(s) to use as the column names, and the start of the data. Default behavior is to infer the column names: if no names are passed the behavior is identical to header=0 and column names are inferred from the first line of the file, if column names are passed explicitly then the behavior is identical to header=None. Explicitly pass header=0 to be able to replace existing names. The header can be a list of ints that specify row locations for a multi-index on the columns e.g. [0,1,3]. Intervening rows that are not specified will be skipped (e.g. 2 in this example is skipped). Note that this parameter ignores commented lines and empty lines if skip_blank_lines=True, so header=0 denotes the first line of data rather than the first line of the file."></i>
-                <input type="input" min="1" max="999" maxlength="3" class="form-control" id="file_header_line" disabled>
+                <input min="0" max="999" maxlength="3" class="form-control" id="file_header_line" name="file_header_line" disabled required  type="text">
             </div>
             <div class="form-group">
                 <label for="file_separator">separator:</label>
                 <i class="fa fa-info-circle" data-toggle="popover" title="Separator" data-content="Delimiter to use. If sep is None, the C engine cannot automatically detect the separator, but the Python parsing engine can, meaning the latter will be used and automatically detect the separator by Python’s builtin sniffer tool,csv.Sniffer. In addition, separators longer than 1 character and different from '\s+' will be interpreted as regular expressions and will also force the use of the Python parsing engine. Note that regex delimiters are prone to ignoring quoted data. Regex example: '\\r\\t'."></i>
-                <input type="input" size="11" maxlength="8" class="form-control " id="file_separator" disabled>
+                <input size="11" maxlength="8" class="form-control " id="file_separator" name="file_separator" disabled required minlength="1" type="text">
             </div>
                     
         </form>                            

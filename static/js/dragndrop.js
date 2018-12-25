@@ -115,7 +115,8 @@ $(document).ready(function() {
                 if (!data['error']) {
                     $.each(data, function(key, value){
                         $('#'+key).val(value);
-                      });  
+                      });
+                    $('[id*="file_"]').prop('disabled', true);  
                     $.each(data['enabled_for_editing'], function(key, value){
                         $('#'+value).prop('disabled', false);
                       });                

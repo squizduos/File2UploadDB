@@ -35,10 +35,10 @@ class Document(models.Model):
     def __str__(self):
         basic_info = f"Document #{self.id} by {self.user.username}, filename {self.original_filename}"
         if self.status == 2:
-            uploaded = f"Uploading to {self.db_host} ({self.db_type}), task_id {self.task_id}..."
+            uploaded = f"Uploaded to {self.db_host} ({self.db_type}) successfully!"
             return f"{basic_info} || {uploaded}"
         elif self.status == 1:
-            uploading = f"Uploaded to {self.db_host} ({self.db_type}) successfully!"
+            uploading = f"Uploading to {self.db_host} ({self.db_type}), task_id {self.task_id}..."
             return f"{basic_info} || {uploading}"
         elif self.status == 0:
             preparing = f"Waiting for data..."

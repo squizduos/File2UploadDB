@@ -153,7 +153,7 @@ class UploadedFileView(LoginRequiredMixin, View):
             logger.info(f'File checking status #{file_id} by user {request.user.username} error; file not found')
             return JsonResponse({"error": "File not found, error: " + str(e)}, status=404)
         try:
-            document.delete()
+            document.document.delete()
             logger.info(f'File upload #{file_id} cancelled by user {request.user.username}')
             return JsonResponse({"error": "File deleted successfully"}, status=200)
         except Exception as e:

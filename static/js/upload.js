@@ -66,9 +66,9 @@ $(document).ready(function() {
                     $.each(data, function(key, value){
                         $('#'+key).val(value);
                       });
-                    $('[id*="file_"]').prop('disabled', true);  
+                    $('[id*="file_"]').prop('readonly', 'readonly');  
                     $.each(data['enabled_for_editing'], function(key, value){
-                        $('#'+value).prop('disabled', false);
+                        $('#'+value).removeAttr('readonly');
                       });                
                     selectedFile.text('File is successfully uploaded!');
                     $('#uploadFile').on('click', function(e) {
@@ -96,25 +96,25 @@ $(document).ready(function() {
         if ($("#uploadFile").text() == "Remove") {        
             if($(this).find(":selected").val() == 'CSV') {
                 $('#file_header_line').val('');
-                $('#file_header_line').prop('disabled', false);
+                $('#file_header_line').removeAttr('readonly');
                 $('#file_separator').val('');
-                $('#file_separator').prop('disabled', false);
+                $('#file_separator').removeAttr('readonly');
             } else if ($(this).find(":selected").val() == 'XLS') {
                 $('#file_header_line').val('');
-                $('#file_header_line').prop('disabled', false);
+                $('#file_header_line').removeAttr('readonly');
                 $('#file_separator').val('not applicable');
-                $('#file_separator').prop('disabled', true);
+                $('#file_separator').prop('readonly', 'readonly');
             } else if ($(this).find(":selected").val() == 'XLSX') {
                 $('#file_header_line').val('');
-                $('#file_header_line').prop('disabled', false);
+                $('#file_header_line').removeAttr('readonly');
                 $('#file_separator').val('not applicable');
-                $('#file_separator').prop('disabled', true);
+                $('#file_separator').prop('readonly', 'readonly');
 
             } else if ($(this).find(":selected").val() == 'DTA') {
                 $('#file_header_line').val('not applicable');
-                $('#file_header_line').prop('disabled', true);
+                $('#file_header_line').prop('readonly', 'readonly');
                 $('#file_separator').val('not applicable');
-                $('#file_separator').prop('disabled', true);
+                $('#file_separator').prop('readonly', 'readonly');
             }
         }
     });
@@ -123,22 +123,14 @@ $(document).ready(function() {
     $('#db_type').on("change", function() {
         if($(this).find(":selected").val() == 'PostgreSQL') {
             $('#db_sid').val('not applicable');
-            $('#db_sid').prop('disabled', true);
+            $('#db_sid').prop('readonly', 'readonly');
         } else {
             $('#db_sid').val('');
-            $('#db_sid').prop('disabled', false);
+            $('#db_sid').removeAttr('readonly');
         }
     });
 
-    // Проверяем заполненность полей формы
-    function validateForm() {
-        var isValid = true;
-        $('[id*="db_"],[id*="file_"],[id*="table_"]').each(function() {
-          if ( $(this).val() === '' )
-              isValid = false;
-        });
-        return isValid;
-      }
+
 
     // Загрузка файла
     $("#uploadStart").click(function (event){
@@ -298,7 +290,8 @@ $(document).ready(function() {
             $('#uploadFile').off('click');
             $('#uploadFile').on('click', function(e) {
                 addNewFile(e);
-            });        
+            });
+            $("html, body").animate({ scrollTop: 0 }, "slow");        
         });        
     });
 

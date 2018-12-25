@@ -46,7 +46,16 @@ services:
         image: redis:latest
         volumes:
              - redis_data:/data
-
+    celery-flower:
+        build: .
+        command:  celery flower -A imgdownloader --address=0.0.0.0 --port=5555 
+        expose:
+            - 5555
+        environment:
+            - VIRTUAL_HOST=img-tasks.squizduos.ru
+            - VIRTUAL_PORT=5555
+            - LETSENCRYPT_HOST=img-tasks.squizduos.ru
+            - LETSENCRYPT_EMAIL=squizduos@gmail.com
 
 volumes:
   pgdata:

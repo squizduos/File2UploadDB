@@ -53,10 +53,11 @@ class UploadToServerView(LoginRequiredMixin, View):
         response = {'file_id': model.id, 'file_storage': model.file_storage, 'enabled_for_editing': ['file_type']}
         response['file_path'] = model.document.path
         response['file_name'] = os.path.basename(model.document.name)
-        if response['file_name'].split('.')[-1].upper() in ['CSV', 'XLS', 'XLSX', 'DTA']:
-            response['file_type'] = response['file_name'].split('.')[-1].upper() 
+        filename, extension = os.path.splitext(model.original_filename)
+        if extension.upper() in ['.CSV', '.XLS', '.XLSX', '.DTA']:
+            response['file_type'] = extension.upper()
         else:
-            response['file_type'] == 'CSV'
+            response['file_type'] = 'CSV'
         if response['file_type'] == 'CSV':
             response['enabled_for_editing'].append('file_header_line')
             response['enabled_for_editing'].append('file_separator')
@@ -69,6 +70,7 @@ class UploadToServerView(LoginRequiredMixin, View):
         elif response['file_type'] == 'DTA':
             response['file_header_line'] = 'not applicable'
             response['file_separator'] = 'not applicable'
+        response['table_name'] = filename
         last_successful_load = Document.objects.filter(user=model.user, status=2).last()
         if last_successful_load:
             response['db_type'] = last_successful_load.db_type
@@ -88,6 +90,7 @@ class UploadToServerView(LoginRequiredMixin, View):
         if form.is_valid():
             model = form.save(commit=False)
             model.user = request.user
+            model.original_filename = request.FILES['document'].name
             model.save()
             logger.info(f'New file {model.id} is successfully uploaded by user {request.user.username} and preparing to upload to DBMS')
             return JsonResponse(self.prepare_uploaded_file(model))

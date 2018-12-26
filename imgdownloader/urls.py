@@ -14,13 +14,39 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from django.urls import include, path
+from django.urls import include, path, re_path
 from django.conf.urls.static import static
 from django.conf import settings
 from authentitcation.views import AdminRegisterView, RegisterView, LoginView, LogoutView
+from authentitcation import api_views as auth_api_views
 from fileupload.views import DashboardView, AdminDashboardView, UploadToServerView, UploadToDBView, UploadedFileView
+from rest_framework_jwt.views import obtain_jwt_token, refresh_jwt_token, verify_jwt_token
+
+from rest_framework import permissions
+from drf_yasg.views import get_schema_view
+from drf_yasg import openapi
+
+
+schema_view = get_schema_view(
+   openapi.Info(
+      title="UploadToDB",
+      default_version='v1',
+      description="Simple project to upload CSV, XLS(X) and DAT files to powerful server",
+      terms_of_service="https://www.google.com/policies/terms/",
+      contact=openapi.Contact(email="contact@snippets.local"),
+      license=openapi.License(name="BSD License"),
+   ),
+   public=True,
+   permission_classes=(permissions.AllowAny,),
+)
+
 
 urlpatterns = [
+    re_path(r'^swagger(?P<format>\.json|\.yaml)$', schema_view.without_ui(cache_timeout=0), name='schema-json'),
+    path('swagger/', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
+    path('redoc/', schema_view.with_ui('redoc', cache_timeout=0), name='schema-redoc'),
+
+
     path('admin/', admin.site.urls),
 
     path('', DashboardView.as_view(), name='dashboard'),
@@ -34,13 +60,16 @@ urlpatterns = [
     path('signup/register/<str:login_hash>', RegisterView.as_view()),
 
     path('api/',include([
+        path('auth/', include([
+            path('login/', obtain_jwt_token),
+            path('refresh/', refresh_jwt_token),
+            path('verify/', verify_jwt_token),
+            path('register/', UploadToDBView, name='api-register'),
+            path('protected/register', auth_api_views.RegistrationByAdminView, name='api-register'),
+        ])),
         path('upload/', UploadToServerView.as_view(), name='api-upload'),
         path('work/', UploadToDBView.as_view(), name="api-start-work"),
         path('work/<file_id>/', UploadedFileView.as_view(), name='api-work-file'),
-        # path('login/', UploadToDBView.as_view(), name='api-login'),
-        # path('logout/', UploadToDBView.as_view(), name='api-login'),
-        # path('admin/register', UploadToDBView.as_view(), name='api-login'),
-        # path('register/', UploadToDBView.as_view(), name='api-login'),
     ])),
 ]
 

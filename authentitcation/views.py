@@ -16,7 +16,6 @@ from django.utils.decorators import method_decorator
 from django.http import HttpResponse
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 
-
 from .models import User
 from .tasks import send_registration_email
 

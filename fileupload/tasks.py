@@ -180,7 +180,7 @@ class DocumentTask(celery.Task):
     def write_row_to_db(self, document, data):
         if document.db_type == 'PostgreSQL':
             try:
-                data.to_sql(document.table_name, self.conn, if_exists='replace')
+                data.to_sql(document.table_name, self.conn, if_exists='append')
             except Exception as e:
                 return False, str(e)
             else:

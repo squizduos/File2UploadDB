@@ -17,9 +17,9 @@ services:
         expose:
             - 8000
         environment:
-            - VIRTUAL_HOST=img-test.squizduos.ru
+            - VIRTUAL_HOST=${BRANCH}.img-test.squizduos.ru
             - VIRTUAL_PORT=8000
-            - LETSENCRYPT_HOST=img-test.squizduos.ru
+            - LETSENCRYPT_HOST=${BRANCH}.img-test.squizduos.ru
             - LETSENCRYPT_EMAIL=squizduos@gmail.com
         volumes:
             - media_data:/code/media
@@ -36,9 +36,9 @@ services:
         expose:
             - 8080
         environment:
-            - VIRTUAL_HOST=img-db.squizduos.ru
+            - VIRTUAL_HOST=${BRANCH}.img-db.squizduos.ru
             - VIRTUAL_PORT=8080
-            - LETSENCRYPT_HOST=img-db.squizduos.ru
+            - LETSENCRYPT_HOST=${BRANCH}.img-db.squizduos.ru
             - LETSENCRYPT_EMAIL=squizduos@gmail.com
     redis:
         image: redis:latest
@@ -50,9 +50,9 @@ services:
         expose:
             - 5555
         environment:
-            - VIRTUAL_HOST=img-tasks.squizduos.ru
+            - VIRTUAL_HOST=${BRANCH}.img-tasks.squizduos.ru
             - VIRTUAL_PORT=5555
-            - LETSENCRYPT_HOST=img-tasks.squizduos.ru
+            - LETSENCRYPT_HOST=${BRANCH}.img-tasks.squizduos.ru
             - LETSENCRYPT_EMAIL=squizduos@gmail.com
 
 

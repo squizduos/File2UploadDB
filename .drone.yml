@@ -1,13 +1,36 @@
 pipeline:
-    deploy:
+    telegram-notify-start-build:
+        image: appleboy/drone-telegram
+        secrets:
+          - telegram_token
+        to: 
+         - 57439615
+        message: >
+            Начинаем собирать {{repo.name}}, ветка  [#{{build.number}}]({{build.link}})
+        when:
+            branch: master
+
+    build:
         image: docker/compose:1.9.0
         commands:
-          - docker-compose build
-          - docker-compose up -d
+         - docker-compose build --no-cache
         volumes:
           - /var/run/docker.sock:/var/run/docker.sock
+        when:
+            branch: master
 
-    telegram:
+    deploy-local:
+        image: docker/compose:1.9.0
+        commands:
+          - docker-compose up -d
+          - docker system prune
+        volumes:
+          - /var/run/docker.sock:/var/run/docker.sock
+        when:
+            branch: master
+            status:  [ success ]
+    
+    telegram-notify-deploy-finished:
         image: appleboy/drone-telegram
         secrets:
           - telegram_token
@@ -20,6 +43,6 @@ pipeline:
                 Попытка собрать {{repo.name}} номер [#{{build.number}}]({{build.link}}) провалилась :-( Срочно пни @squizduos.
             {{/success}}
         when:
-            status:
-              - success
-              - failure
+            branch: master
+            status:  [ failure, success ]
+

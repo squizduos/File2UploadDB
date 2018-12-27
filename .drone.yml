@@ -70,7 +70,7 @@ pipeline:
         volumes:
           - /var/run/docker.sock:/var/run/docker.sock
         environment:
-            DOMAIN: {{DRONE_COMMIT_BRANCH}}.{{PROJECT_NAME}}.{{BASE_DOMAIN}}
+            DOMAIN: ${DRONE_COMMIT_BRANCH}.${PROJECT_NAME}.${BASE_DOMAIN}
         when:
             branch: master
             status:  [ success ]

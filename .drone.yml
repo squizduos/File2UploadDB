@@ -23,7 +23,6 @@ pipeline:
         image: docker/compose:1.9.0
         commands:
           - docker-compose up -d
-          - docker system prune
         volumes:
           - /var/run/docker.sock:/var/run/docker.sock
         when:
@@ -38,17 +37,17 @@ pipeline:
          - 57439615
         message: >
             {{#success build.status}}
-                Сборка проекта {{repo.name}} ветка  {{commit.branch}} успешно завершена.
-                Время общей сборки {{since build.started}} секунд.
-                Детальный лог доступен по [#ссылке]({{build.link}}).
+            Сборка проекта {{repo.name}} ветка  {{commit.branch}} успешно завершена.
+            Время общей сборки {{since build.started}} секунд.
+            Детальный лог доступен по [#ссылке]({{build.link}}).
 
-                Сервис возобновил свою работу на [http://img-test.squizduos.ru](http://img-test.squizduos.ru).
+            Сервис возобновил свою работу на [http://img-test.squizduos.ru](http://img-test.squizduos.ru).
             {{else}}
-                Сборка проекта {{repo.name}} ветка  {{commit.branch}} не удалась.
-                Виновник торжества - {{commit.author}}.
-                Детальный лог доступен по [ссылке]({{build.link}}). Полезная информация будет [в репозитории](commit.link)
+            Сборка проекта {{repo.name}} ветка  {{commit.branch}} не удалась.
+            Виновник торжества - {{commit.author}}.
+            Детальный лог доступен по [ссылке]({{build.link}}). Полезная информация будет [в репозитории](commit.link)
 
-                Сервис продолжает работу в стабильном режиме по адресу [http://img-test.squizduos.ru](http://img-test.squizduos.ru).
+            Сервис продолжает работу в стабильном режиме по адресу [http://img-test.squizduos.ru](http://img-test.squizduos.ru).
             {{/success}}
         when:
             branch: master

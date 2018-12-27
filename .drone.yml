@@ -1,7 +1,7 @@
 environment:
     PROJECT_NAME: dbtableuploader
     BASE_DOMAIN: squizduos.ru
-    REPOSITORY_URL: 
+    REPOSITORY_URL: https://gogs.squizduos.ru/squizduos/img-test/commit
 
 pipeline:
     print-environment:
@@ -9,7 +9,7 @@ pipeline:
         environment:
             DOMAIN: ${DRONE_COMMIT_BRANCH}.${PROJECT_NAME}.${BASE_DOMAIN}
         commands:
-         - echo $DOMAIN
+         - printenv
 
     telegram-notify-start-build:
         image: appleboy/drone-telegram

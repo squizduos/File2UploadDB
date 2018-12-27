@@ -57,6 +57,7 @@ services:
             - LETSENCRYPT_HOST=img-tasks.squizduos.ru
             - LETSENCRYPT_EMAIL=squizduos@gmail.com
 
+
 volumes:
   pgdata:
   ordata:

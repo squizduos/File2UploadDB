@@ -66,7 +66,7 @@ pipeline:
     deploy-local:
         image: docker/compose:1.9.0
         commands:
-          - docker-compose up -p "${DRONE_REPO_NAME}-${DRONE_COMMIT_BRANCH}" -d
+          - docker-compose up -p ${DRONE_REPO_NAME}-${DRONE_COMMIT_BRANCH} -d
         volumes:
           - /var/run/docker.sock:/var/run/docker.sock
         when:

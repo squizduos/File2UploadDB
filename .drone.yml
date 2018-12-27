@@ -27,7 +27,7 @@ pipeline:
             `{{commit.message}}`
 
     build:
-        image: docker/compose:1.9.0
+        image: docker/compose:1.23.2
         commands:
          - docker-compose build
         volumes:
@@ -64,7 +64,7 @@ pipeline:
             status:  [ success ]
 
     deploy-local:
-        image: docker/compose:1.9.0
+        image: docker/compose:1.23.2
         commands:
           - docker-compose up -p ${DRONE_REPO_NAME}-${DRONE_COMMIT_BRANCH} -d
         volumes:

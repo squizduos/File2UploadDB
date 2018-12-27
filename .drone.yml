@@ -18,7 +18,7 @@ pipeline:
             Автор - {{commit.author}}.
 
 
-            В случае успешной сборки проект будет размещен по [ссылке](https://{{DRONE_COMMIT_BRANCH}}.{{PROJECT_NAME}}.{{BASE_DOMAIN}})
+            В случае успешной сборки проект будет размещен по [ссылке](https://${DRONE_COMMIT_BRANCH}.${PROJECT_NAME}.${BASE_DOMAIN})
             
 
             Комментарий доступен ниже. Ссылка на коммит [прилагается](https://gogs.squizduos.ru/squizduos/img-test/commit/{{commit.sha}}).

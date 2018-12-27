@@ -47,18 +47,18 @@ pipeline:
             ⚠️ **Внимание! Заливка!**
             
 
-            В ближайшие 20 секунд сервис [img-test](http://img-test.squizduos.ru) может быть недоступен. Приносим свои извинения.
+            В ближайшие 20 секунд сервис [{{commit.branch}}/{{repo.name}}](https://{{commit.branch}}.{{repo.name}}.squizduos.ru) может быть недоступен. Приносим свои извинения.
             {{else}}
             ❌ Сборка проекта `{{repo.name}} - {{commit.branch}} rev.{{build.number}}` не удалась.
 
 
-            Виновник торжества - {{commit.author}}. Коммит [прилагается](https://gogs.squizduos.ru/squizduos/img-test/commit/{{commit.sha}}).
+            Виновник торжества - {{commit.author}}. Коммит [прилагается](https://gogs.squizduos.ru/squizduos/{{repo.name}}/commit/{{commit.sha}}).
 
 
             Детальный лог доступен по [ссылке]({{build.link}}). 
 
 
-            Сервис продолжает работу в стабильном режиме по адресу [http://img-test.squizduos.ru](http://img-test.squizduos.ru).
+            Сервис продолжает работу в стабильном режиме по адресу [https://{{commit.branch}}.{{repo.name}}.squizduos.ru](https://{{commit.branch}}.{{repo.name}}.squizduos.ru).
             {{/success}}
         when:
             status:  [ success ]
@@ -66,13 +66,10 @@ pipeline:
     deploy-local:
         image: docker/compose:1.9.0
         commands:
-          - docker-compose up -d
+          - docker-compose up -p "${DRONE_REPO_NAME}-${DRONE_COMMIT_BRANCH}" -d
         volumes:
           - /var/run/docker.sock:/var/run/docker.sock
-        environment:
-            DOMAIN: ${DRONE_COMMIT_BRANCH}.${PROJECT_NAME}.${BASE_DOMAIN}
         when:
-            branch: master
             status:  [ success ]
     
     telegram-notify-deploy-finished:
@@ -93,12 +90,12 @@ pipeline:
             Детальный лог доступен по [ссылке]({{build.link}}).
 
 
-            Сервис возобновил свою работу на [http://img-test.squizduos.ru](http://img-test.squizduos.ru).
+            Сервис возобновил свою работу на [(https://{{commit.branch}}.{{repo.name}}.squizduos.ru]((https://{{commit.branch}}.{{repo.name}}.squizduos.ru).
             {{else}}
             ❌ **ВНИМАНИЕ! ВНИМАНИЕ!**
 
 
-            Попытка запуска неудачная! Сервис [http://img-test.squizduos.ru](http://img-test.squizduos.ru) недоступен.
+            Попытка запуска неудачная! Сервис [(https://{{commit.branch}}.{{repo.name}}.squizduos.ru]((https://{{commit.branch}}.{{repo.name}}.squizduos.ru) недоступен.
 
 
             Немедленно сообщите @squizduos.

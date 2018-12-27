@@ -8,12 +8,20 @@ pipeline:
         format: markdown
         message: >
             🕒 Начинаем собирать `{{repo.name}} - {{commit.branch}} rev.{{build.number}}`.
+            ==================
 
             Автор - {{commit.author}}.
             
-            Комментарий доступен ниже. Ссылка на коммит - [прилагается](https://gogs.squizduos.ru/squizduos/img-test/commit/{{commit.sha}})
+
+            Комментарий доступен ниже. Ссылка на коммит [прилагается](https://gogs.squizduos.ru/squizduos/img-test/commit/{{commit.sha}}).
             
+
             `{{commit.message}}`
+
+
+            - [x] Собираем проект
+            - [ ] Тестируем проект
+            - [ ] Перезапускаем проект
         when:
             branch: master
 

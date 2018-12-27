@@ -6,14 +6,14 @@ pipeline:
         to: 
          - 57439615
         message: >
-            Начинаем собирать {{repo.name}}, ветка  [#{{build.number}}]({{build.link}})
+            Начинаем собирать {{repo.name}} ветка  [#{{build.number}}]({{build.link}})
         when:
             branch: master
 
     build:
         image: docker/compose:1.9.0
         commands:
-         - docker-compose build --no-cache
+         - docker-compose build
         volumes:
           - /var/run/docker.sock:/var/run/docker.sock
         when:
@@ -38,9 +38,17 @@ pipeline:
          - 57439615
         message: >
             {{#success build.status}}
-                Попытка собрать {{repo.name}} номер [#{{build.number}}]({{build.link}}) успешна! Заходи и наслаждайся :-)
+                Сборка проекта {{repo.name}} ветка  {{commit.branch}} успешно завершена.
+                Время общей сборки {{since build.started}} секунд.
+                Детальный лог доступен по [#ссылке]({{build.link}}).
+
+                Сервис возобновил свою работу на [http://img-test.squizduos.ru](http://img-test.squizduos.ru).
             {{else}}
-                Попытка собрать {{repo.name}} номер [#{{build.number}}]({{build.link}}) провалилась :-( Срочно пни @squizduos.
+                Сборка проекта {{repo.name}} ветка  {{commit.branch}} не удалась.
+                Виновник торжества - {{commit.author}}.
+                Детальный лог доступен по [ссылке]({{build.link}}). Полезная информация будет [в репозитории](commit.link)
+
+                Сервис продолжает работу в стабильном режиме по адресу [http://img-test.squizduos.ru](http://img-test.squizduos.ru).
             {{/success}}
         when:
             branch: master

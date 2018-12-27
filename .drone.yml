@@ -5,8 +5,9 @@ pipeline:
           - telegram_token
         to: 
          - 57439615
+        format: markdown
         message: >
-            🕒 Начинаем собирать {{repo.name}} ветка  [#{{build.number}}]({{build.link}}).
+            🕒 Начинаем собирать `{{repo.name}} - {{commit.branch}} rev.{{build.number}}`.
 
             Автор - {{commit.author}}.
             
@@ -31,13 +32,14 @@ pipeline:
           - telegram_token
         to: 
          - 57439615
+        format: markdown
         message: >
             {{#success build.status}}
             ⚠️ **Внимание! Заливка!**
             
             В ближайшие 20 секунд сервис [img-test](http://img-test.squizduos.ru) может быть недоступен. Приносим свои извинения.
             {{else}}
-            ❌ Сборка проекта {{repo.name}} - {{commit.branch}} rev.{{build.number}} не удалась.
+            ❌ Сборка проекта `{{repo.name}} - {{commit.branch}} rev.{{build.number}}` не удалась.
 
             Виновник торжества - {{commit.author}}. Коммит [прилагается](https://gogs.squizduos.ru/squizduos/img-test/commit/{{commit.sha}}).
 
@@ -65,9 +67,10 @@ pipeline:
           - telegram_token
         to: 
          - 57439615
+        format: markdown
         message: >
             {{#success build.status}}
-            Сборка проекта {{repo.name}} - {{commit.branch}} rev.{{build.number}} успешно завершена.
+            Сборка проекта `{{repo.name}} - {{commit.branch}} rev.{{build.number}}` успешно завершена.
 
             Сборка проекта шла с {{datetime build.started "15:04:05" "GMT+3"}} по {{datetime build.finished "15:04:05" "GMT+3"}} {{datetime build.finished "01.02.2006" "GMT+3"}} г.
             

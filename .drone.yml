@@ -1,13 +1,6 @@
-environment:
-    PROJECT_NAME: dbtableuploader
-    BASE_DOMAIN: squizduos.ru
-    REPOSITORY_URL: https://gogs.squizduos.ru/squizduos/img-test/commit
-
 pipeline:
     print-environment:
         image: alpine/git
-        environment:
-            DOMAIN: ${DRONE_COMMIT_BRANCH}.$${PROJECT_NAME}.$${BASE_DOMAIN}
         commands:
          - printenv
 
@@ -18,8 +11,6 @@ pipeline:
         to: 
          - 57439615
         format: markdown
-        environment:
-            DOMAIN: ${DRONE_COMMIT_BRANCH}.${PROJECT_NAME}.${BASE_DOMAIN}
         message: >
             🕒 Начинаем собирать `{{repo.name}} - {{commit.branch}} rev.{{build.number}}`.
 
@@ -27,10 +18,10 @@ pipeline:
             Автор - {{commit.author}}.
 
 
-            В случае успешной сборки проект будет размещен по [ссылке](https://${DRONE_COMMIT_BRANCH}.${PROJECT_NAME}.${BASE_DOMAIN})
+            В случае успешной сборки проект будет размещен по [ссылке](https://{{commit.branch}}.{{repo.name}}.squizduos.ru)
             
 
-            Комментарий доступен ниже. Ссылка на коммит [прилагается](https://gogs.squizduos.ru/squizduos/img-test/commit/{{commit.sha}}).
+            Комментарий доступен ниже. Ссылка на коммит [прилагается](https://gogs.squizduos.ru/squizduos/{repo.name}/commit/{{commit.sha}}).
             
 
             `{{commit.message}}`

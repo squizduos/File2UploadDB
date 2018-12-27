@@ -5,9 +5,7 @@ services:
         volumes:
              - pgdata:/var/lib/postgresql/data
     oracle:
-        image: wnameless/oracle-xe-11g
-        ports:
-            - 49161:1521        
+        image: wnameless/oracle-xe-11g       
         expose:
             - 49161
         environment:
@@ -26,6 +24,8 @@ services:
         volumes:
             - media_data:/code/media
             - log_data:/code/log
+        networks:
+          - nginx-proxy
     celery:
         build: .
         command: celery worker -l info -A imgdownloader
@@ -65,6 +65,6 @@ volumes:
   log_data:
 
 networks:
-  default:
+  nginx-proxy:
     external:
       name: nginx-proxy

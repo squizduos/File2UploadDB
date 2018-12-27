@@ -1,3 +1,8 @@
+environment:
+    PROJECT_NAME: dbtableuploader
+    BASE_DOMAIN: squizduos.ru
+    REPOSITORY_URL: 
+
 pipeline:
     telegram-notify-start-build:
         image: appleboy/drone-telegram
@@ -11,14 +16,15 @@ pipeline:
 
 
             Автор - {{commit.author}}.
+
+
+            В случае успешной сборки проект будет размещен по [ссылке](https://{{DRONE_COMMIT_BRANCH}}.{{PROJECT_NAME}}.{{BASE_DOMAIN}})
             
 
             Комментарий доступен ниже. Ссылка на коммит [прилагается](https://gogs.squizduos.ru/squizduos/img-test/commit/{{commit.sha}}).
             
 
             `{{commit.message}}`
-        when:
-            branch: master
 
     build:
         image: docker/compose:1.9.0
@@ -55,7 +61,6 @@ pipeline:
             Сервис продолжает работу в стабильном режиме по адресу [http://img-test.squizduos.ru](http://img-test.squizduos.ru).
             {{/success}}
         when:
-            branch: master
             status:  [ success ]
 
     deploy-local:
@@ -64,6 +69,8 @@ pipeline:
           - docker-compose up -d
         volumes:
           - /var/run/docker.sock:/var/run/docker.sock
+        environment:
+            DOMAIN: {{DRONE_COMMIT_BRANCH}}.{{PROJECT_NAME}}.{{BASE_DOMAIN}}
         when:
             branch: master
             status:  [ success ]

@@ -18,6 +18,18 @@ pipeline:
           - /var/run/docker.sock:/var/run/docker.sock
         when:
             branch: master
+    
+    telegram-notify-start-deploy:
+        image: appleboy/drone-telegram
+        secrets:
+          - telegram_token
+        to: 
+         - 57439615
+        message: >
+            Внимание! В ближайшие 20 секунд сервис [http://img-test.squizduos.ru](http://img-test.squizduos.ru) может быть недоступен. Приносим свои извинения.
+        when:
+            branch: master
+            status:  [ success ]
 
     deploy-local:
         image: docker/compose:1.9.0
@@ -37,14 +49,14 @@ pipeline:
          - 57439615
         message: >
             {{#success build.status}}
-            Сборка проекта {{repo.name}} - {{commit.branch}} rev.{{build.number}} **успешно завершена**.
+            Сборка проекта {{repo.name}} - {{commit.branch}} rev.{{build.number}} успешно завершена.
             Время общей сборки {{since build.started}} секунд (с {{datetime build.started "2006-Jan-02T15:04:05Z" "GMT+3"}} по {{datetime build.finished "2006-Jan-02T15:04:05Z" "GMT+3"}}).
             Детальный лог доступен по [ссылке]({{build.link}}). Возможно, стоит просмотреть коммит по [ссылке]({{commit.link}}). 
             Сервис возобновил свою работу на [http://img-test.squizduos.ru](http://img-test.squizduos.ru).
             {{else}}
-            Сборка проекта {{repo.name}} - {{commit.branch}} rev.{{build.number}} **не удалась**.
+            Сборка проекта {{repo.name}} - {{commit.branch}} rev.{{build.number}} не удалась.
             Виновник торжества - {{commit.author}}.
-            Детальный лог доступен по [ссылке]({{build.link}}). Полезная информация будет [в репозитории]({{commit.link}}).
+            Детальный лог доступен по [ссылке]({{build.link}}). 
             Сервис продолжает работу в стабильном режиме по адресу [http://img-test.squizduos.ru](http://img-test.squizduos.ru).
             {{/success}}
         when:

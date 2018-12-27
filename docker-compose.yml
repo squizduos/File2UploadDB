@@ -24,8 +24,6 @@ services:
         volumes:
             - media_data:/code/media
             - log_data:/code/log
-        networks:
-          - nginx-proxy
     celery:
         build: .
         command: celery worker -l info -A imgdownloader
@@ -66,6 +64,6 @@ volumes:
   log_data:
 
 networks:
-  nginx-proxy:
+  default:
     external:
       name: nginx-proxy

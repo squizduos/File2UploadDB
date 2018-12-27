@@ -38,7 +38,7 @@ pipeline:
         message: >
             {{#success build.status}}
             Сборка проекта {{repo.name}}/{{commit.branch}} rev.{{build.number}} **успешно завершена**.
-            Время общей сборки {{since build.started}} секунд (с {{datetime build.started "2006-Jan-02T15:04:05Z" "GMT+3"}} по {{datetime build.finished "2006-Jan-02T15:04:05Z" "GMT+3"}}).
+            Время общей сборки {{since build.started}} секунд.
             Детальный лог доступен по [ссылке]({{build.link}}). Возможно, стоит просмотреть коммит по [ссылке]({{commit.link}}). 
             Сервис возобновил свою работу на [http://img-test.squizduos.ru](http://img-test.squizduos.ru).
             {{else}}

@@ -78,7 +78,7 @@ class UploadToServerView(LoginRequiredMixin, View):
             elif last_successful_load.db_type == 'Oracle':
                 response['db_sid'] = last_successful_load.db_sid
                 response['enabled_for_editing'].append("db_sid")
-        response['enabled_for_editing'] += ["table_name", "db_type", "db_host", "db_port", "db_username", "db_password", "db_name"]
+        response['enabled_for_editing'] += ["table_name", "db_type", "db_host", "db_port", "db_username", "db_password", "db_name", "file_id"]
         return response
 
     def post(self, request):

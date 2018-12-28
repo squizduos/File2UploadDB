@@ -111,10 +111,6 @@ class UploadToDBView(LoginRequiredMixin, View):
         except Exception as e:
             logger.info(f'File preparing #{data["file_id"]} by user {request.user.username} error; file not found')
             return JsonResponse({"error": "File not found"}, status=404)
-        if data['file_header_line'] == 'not applicable':
-            data['file_header_line'] = ""
-        if data['file_separator'] == 'not applicable':
-            data['file_separator'] = ""
         form = DocumentUpdateForm(data, instance=document)
         if form.is_valid():
             model = form.save(commit=False)

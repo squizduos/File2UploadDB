@@ -64,7 +64,7 @@ $(document).ready(function() {
                 var data = $.parseJSON(event.target.response);
                 if (!data['error']) {
                     $.each(data, function(key, value){
-                        if (key in data['enabled for editing']) {
+                        if (key in data['enabled for editing'].values()) {
                             $('#'+key).removeAttr('readonly');
                             $('#'+key).val(value);
                         } else {

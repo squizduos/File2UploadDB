@@ -141,14 +141,17 @@ class UploadedFileView(LoginRequiredMixin, View):
             return JsonResponse({"status": -1, "error": "File not found"}, status=404)
         info = AsyncResult(document.task_id).info
         response = {"status": document.status}
-        if 'error' in info: 
-            response.update(error=info['error'])
-        if 'log' in info: 
-            response.update(error=info['log'])
-        if 'status_string' in info: 
-            response.update(error=info['status_string'])
-        if 'percent' in info: 
-            response.update(error=info['percent'])
+        try:
+            if 'error' in info: 
+                response.update(error=info['error'])
+            if 'log' in info: 
+                response.update(error=info['log'])
+            if 'status_string' in info: 
+                response.update(error=info['status_string'])
+            if 'percent' in info: 
+                response.update(error=info['percent'])
+        except Exception as e:
+            response.update(error_rendering=str(e))
         return JsonResponse(response)
 
     def delete(self, request, file_id):

@@ -71,8 +71,8 @@ class DocumentTask(celery.Task):
 
     def on_failure(self, exc, task_id, args, kwargs, einfo):
         state = celery.result.AsyncResult(task_id).info
-        error = state['error'] if 'error' in state else exc
-        log = state['log'] if 'log' in state else exc
+        error = state['error'] if 'error' in state else str(exc)
+        log = state['log'] if 'log' in state else str(exc)
         logger.info(f"File {self.file_id} uploading faled; error {error}")
         document = Document.objects.get(id=self.file_id)
         document.status = -1

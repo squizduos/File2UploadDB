@@ -86,6 +86,8 @@ class DocumentTask(celery.Task):
         return self.update_state(
             state=celery.states.FAILURE,
             meta={
+                'exc_type': type(Exception).__name__,
+                'exc_message': traceback.format_exc().split('\n'),
                 'error': err_string,
                 'log': self.log,
             }

@@ -172,7 +172,7 @@ $(document).ready(function() {
                 return false;
             },                      
             debug: true,
-            ignore: ".absoulte-random-class"
+            ignore: ":disabled"
         };
         $("#file-info-form").validate(validateRules);
         $("#table-info-form").validate(validateRules);
@@ -198,7 +198,7 @@ $(document).ready(function() {
                 workWithFileShowError(textStatus);
             })         
         } else {
-
+            alert("You have to upload file before starting");
         }
     }
 

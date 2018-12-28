@@ -30,6 +30,7 @@ class Document(models.Model):
     task_id = models.CharField(max_length=100, blank=True)
     status = models.IntegerField(choices=DOCUMENT_STATUS, default=0)
     error = models.CharField(max_length=100000, default="", blank=True, null=True)
+    percent = models.IntegerField(null=True)
     log = models.TextField(default="", blank=True)
 
     def __str__(self):

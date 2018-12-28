@@ -14,8 +14,6 @@ services:
         environment:
             - ORACLE_ALLOW_REMOTE=true
             - ORACLE_ENABLE_XDB=true
-        volumes:
-            - ordata:/u01/app/oracle/oradata/XE/
     web:
         build: .
         command: bash docker-entrypoint.sh
@@ -23,6 +21,7 @@ services:
             - .:/code
         ports:
             - "8001:8000"
+            - "3000:3000"
         depends_on:
             - db
         dns: 8.8.8.8
@@ -32,7 +31,7 @@ services:
 
     celery:
         build: .
-        command: celery worker -l info -A imgdownloader
+        command: celery worker -l info -A imgdownloader 
         volumes:
         - '.:/code'
 

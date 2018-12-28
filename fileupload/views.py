@@ -8,6 +8,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
 from django.http import JsonResponse
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
+from django.core.serializers import serialize
 
 from .forms import DocumentUpdateForm, DocumentUploadForm
 from .models import Document
@@ -45,7 +46,11 @@ class UploadToServerView(LoginRequiredMixin, View):
     login_url = "/login/"
 
     def prepare_uploaded_file(self, model):
-        response = {'file_id': model.id, 'file_storage': model.file_storage, 'enabled_for_editing': ['file_type']}
+        response = {}
+        response['enabled_for_editing'] = ['file_type']
+
+        response['file_id'] = model.id, 
+        response['file_storage'] = model.file_storage
         response['file_path'] = model.document.path
         response['file_name'] = os.path.basename(model.document.name)
         filename, extension = os.path.splitext(model.original_filename)
@@ -54,12 +59,16 @@ class UploadToServerView(LoginRequiredMixin, View):
         else:
             response['file_type'] = 'CSV'
         if response['file_type'] == 'CSV':
+            response['file_header_line'] = ""
+            response['file_separator'] = ""
             response['enabled_for_editing'].append('file_header_line')
             response['enabled_for_editing'].append('file_separator')
         elif response['file_type'] == 'XLS':
+            response['file_header_line'] = ""
             response['enabled_for_editing'].append('file_header_line')
             response['file_separator'] = 'not applicable'
         elif response['file_type'] == 'XLSX':
+            response['file_header_line'] = ""
             response['enabled_for_editing'].append('file_header_line')
             response['file_separator'] = 'not applicable'
         elif response['file_type'] == 'DTA':
@@ -139,19 +148,7 @@ class UploadedFileView(LoginRequiredMixin, View):
         except Exception as e:
             logger.info(f'File checking status #{data["file_id"]} by user {request.user.username} error; file not found')
             return JsonResponse({"status": -1, "error": "File not found"}, status=404)
-        info = AsyncResult(document.task_id).info
-        response = {"status": document.status}
-        try:
-            if 'error' in info: 
-                response.update(error=info['error'])
-            if 'log' in info: 
-                response.update(log=info['log'])
-            if 'status_string' in info: 
-                response.update(status_string=info['status_string'])
-            if 'percent' in info: 
-                response.update(percent=info['percent'])
-        except Exception as e:
-            response.update(error_rendering=str(e))
+        response = {"status": document.status, "error": document.error, "percent": document.percent}
         return JsonResponse(response)
 
     def delete(self, request, file_id):

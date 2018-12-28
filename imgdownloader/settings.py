@@ -38,7 +38,8 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'authentitcation',
-    'fileupload'
+    'fileupload',
+    'django_celery_monitor',
 ]
 
 MIDDLEWARE = [

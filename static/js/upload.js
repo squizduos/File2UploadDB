@@ -172,7 +172,7 @@ $(document).ready(function() {
                 return false;
             },                      
             debug: true,
-            ignore: ":disabled"
+            ignore: ":readonly"
         };
         $("#file-info-form").validate(validateRules);
         $("#table-info-form").validate(validateRules);

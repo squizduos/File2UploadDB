@@ -74,6 +74,7 @@ $(document).ready(function() {
                     $('#uploadFile').on('click', function(e) {
                         e.preventDefault();
                         deleteFile(event);
+                        location.window.reload();
                     });
                     $('#uploadFile').html('Remove');
                     $('#uploadFile').prop('class', 'btn btn-danger btn-lg');    

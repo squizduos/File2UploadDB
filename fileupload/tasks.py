@@ -55,7 +55,7 @@ class DocumentTask(celery.Task):
         for i, cdf in enumerate(chunker(data, chunksize)):
             status, err = self.write_row_to_db(document, cdf)
             if not status:
-                err_string = f"File {document.id}, was not succesfully uploaded; error while inserting to DBMS, sql {sql}, err {err}."
+                err_string = f"File {document.id}, was not succesfully uploaded; error while inserting to DBMS, err {err}."
                 return self.update_with_error(err_string)
             status_string = "Step 3: Uploading file to DBMS..."
             self.update_with_pending(status_string, i)

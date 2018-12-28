@@ -66,7 +66,7 @@ class DocumentTask(celery.Task):
         logger.info(f"File {self.file_id} uploading succeed!")
         document = Document.objects.get(id=self.file_id)
         document.status = 2
-        document.log = state['log']
+        document.log = state['log'] if type(state['log']) == str else "Can't serialize log"
         document.save()
 
     def on_failure(self, exc, task_id, args, kwargs, einfo):

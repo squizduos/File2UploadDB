@@ -49,7 +49,7 @@ class DocumentTask(celery.Task):
         # Step 3: write all to table
         status_string = "Step 3: Uploading file to DBMS..."
         self.update_with_pending(status_string, 0)
-        chunksize = int(len(data) / 100) # 1%
+        chunksize = int(len(data) / 100) if len(data) > 200 else len(data) # 1%
         for i, cdf in enumerate(chunker(data, chunksize)):
             status, err = self.write_row_to_db(self.document, cdf)
             if not status:

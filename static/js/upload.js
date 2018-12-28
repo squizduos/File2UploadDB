@@ -179,7 +179,7 @@ $(document).ready(function() {
         $("#db-info-form").validate(validateRules);
         if ($("#file-info-form").valid() &&  $("#table-info-form").valid() && $("#db-info-form").valid()) {
             var form_data = {};
-            data = $('[id*="db_"],[id*="file_"],[id*="table_"]');
+            data = $('[id*="db_"],[id*="file_"],[id*="table_"]').not('[readonly]');
             for (i = 0; i < data.length; i++) {
                 form_data[data[i].id] = data[i].value;
             }

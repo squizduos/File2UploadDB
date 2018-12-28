@@ -34,7 +34,7 @@ class Document(models.Model):
 
     def __str__(self):
         basic_info = f"Document #{self.id} by {self.user.username}, filename {self.original_filename}"
-        if not self.document.path:
+        if not self.document.name:
             basic_info += ", deleted from server"
         if self.status == 2:
             uploaded = f"Uploaded to {self.db_host} ({self.db_type}) successfully!"

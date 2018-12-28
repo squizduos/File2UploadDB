@@ -145,11 +145,11 @@ class UploadedFileView(LoginRequiredMixin, View):
             if 'error' in info: 
                 response.update(error=info['error'])
             if 'log' in info: 
-                response.update(error=info['log'])
+                response.update(log=info['log'])
             if 'status_string' in info: 
-                response.update(error=info['status_string'])
+                response.update(status_string=info['status_string'])
             if 'percent' in info: 
-                response.update(error=info['percent'])
+                response.update(percent=info['percent'])
         except Exception as e:
             response.update(error_rendering=str(e))
         return JsonResponse(response)

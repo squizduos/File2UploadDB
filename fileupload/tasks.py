@@ -82,7 +82,7 @@ class DocumentTask(celery.Task):
 
     def update_with_error(self, err_string):
         logger.info(f"[# Document {self.file_id}] {err_string}")
-        self.local_log += f'{err_string}\n'
+        self.log += f'{err_string}\n'
         return self.update_state(
             state=celery.states.FAILURE,
             meta={

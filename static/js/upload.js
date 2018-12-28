@@ -73,7 +73,7 @@ $(document).ready(function() {
                     selectedFile.text('File is successfully uploaded!');
                     $('#uploadFile').on('click', function(e) {
                         e.preventDefault();
-                        clearFile(event);
+                        deleteFile(event);
                     });
                     $('#uploadFile').html('Remove');
                     $('#uploadFile').prop('class', 'btn btn-danger btn-lg');    

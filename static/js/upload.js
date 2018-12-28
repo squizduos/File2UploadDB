@@ -64,12 +64,15 @@ $(document).ready(function() {
                 var data = $.parseJSON(event.target.response);
                 if (!data['error']) {
                     $.each(data, function(key, value){
-                        $('#'+key).val(value);
-                      });
-                    $('[id*="file_"]').prop('readonly', 'readonly');  
-                    $.each(data['enabled_for_editing'], function(key, value){
-                        $('#'+value).removeAttr('readonly');
-                      });                
+                        if (key in data['enabled for editing']) {
+                            $('#'+key).removeAttr('readonly');
+                            $('#'+key).val(value);
+                        } else {
+                            $('#'+key).val("");
+                            $('#'+key).prop("readonly", "readonly")
+                            $('#'+key).prop('placeholder', value);      
+                        }
+                      });           
                     selectedFile.text('File is successfully uploaded!');
                     $('#uploadFile').on('click', function(e) {
                         e.preventDefault();

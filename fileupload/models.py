@@ -15,7 +15,7 @@ class Document(models.Model):
     original_filename = models.CharField(max_length=128, verbose_name="Original filename")
     document = models.FileField(upload_to='documents/', blank=True)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    file_storage = models.CharField(max_length=255, default="Temporary - deleted after import to database")
+    file_storage = models.CharField(max_length=255, default="Temporary - deleted after import to database", blank=True, null=True)
     file_type = models.CharField(max_length=255, default="CSV")
     file_header_line = models.CharField(max_length=3, blank=True)
     file_separator = models.CharField(max_length=14, blank=True)

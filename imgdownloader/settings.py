@@ -136,7 +136,7 @@ PROJECT_DIR = os.path.dirname(os.path.abspath(__file__))
 
 STATIC_ROOT = os.path.join(PROJECT_DIR, 'production_static')
 
-DOMAIN = "img-test.squizduos.ru"
+DOMAIN = os.getenv("VIRTUAL_HOST", "localhost")
 
 EMAIL_USE_TLS = True
 EMAIL_HOST = 'smtp.udag.de'

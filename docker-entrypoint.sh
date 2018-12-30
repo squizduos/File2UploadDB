@@ -1,5 +1,7 @@
 #!/bin/bash
 
+export DOMAIN=$VIRTUAL_HOST
+
 # Collect static files
 echo "Collect static files"
 python manage.py collectstatic --noinput

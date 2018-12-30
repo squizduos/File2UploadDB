@@ -127,6 +127,7 @@ $(document).ready(function() {
     // При выборе PostgreSQL лочится SID
     $('#db_type').on("change", function() {
         if($(this).find(":selected").val() == 'PostgreSQL') {
+            $('#db_sid').val('');
             $('#db_sid').prop('placeholder', 'not applicable');
             $('#db_sid').prop('readonly', 'readonly');
         } else {

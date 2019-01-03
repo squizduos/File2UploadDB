@@ -57,6 +57,7 @@ $(document).ready(function() {
     function changeEditing(element_id, editable) {
         element = $("#" + element_id);
         if (editable && element.attr('readonly')) {
+            element.prop("placeholder", "");
             element.removeAttr('readonly');
         } else if (!editable && !element.attr('readonly')) {
             element.prop("readonly", "readonly");

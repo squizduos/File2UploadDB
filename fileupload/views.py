@@ -12,7 +12,7 @@ from django.core.serializers import serialize
 
 from .forms import DocumentUpdateForm, DocumentUploadForm
 from .models import Document
-from .utils import file_read_from_tail
+from .utils import file_read_from_tail, decode_db_connection, encode_db_connection
 from .tasks import DocumentTask
 
 from celery.result import AsyncResult
@@ -75,18 +75,22 @@ class UploadToServerView(LoginRequiredMixin, View):
             response['file_header_line'] = 'not applicable'
             response['file_separator'] = 'not applicable'
         response['table_name'] = filename
-        last_successful_load = Document.objects.filter(user=model.user, status=2).last()
-        if last_successful_load:
-            response['db_type'] = last_successful_load.db_type
-            response['db_host'] = last_successful_load.db_host
-            response['db_port'] = last_successful_load.db_port
-            response['db_username'] = last_successful_load.db_username
-            response['db_password'] = last_successful_load.db_password
-            if last_successful_load.db_type == 'PostgreSQL':
-                response['db_name'] = last_successful_load.db_name
-            elif last_successful_load.db_type == 'Oracle':
-                response['db_sid'] = last_successful_load.db_sid
-                response['enabled_for_editing'].append("db_sid")
+        response['db_connection'] = []
+        db_connections = list(Document.objects.filter(user=model.user, status=2).values_list('db_connection', flat=True).distinct())
+        for conn in db_connections:
+            fields = decode_db_connection(conn)
+            response['db_connection'].append({"name": f"{fields['db_type']} ({fields['db_host']})", "value": conn})
+        # for load in succ:
+        #     response['db_type'] = last_successful_load.db_type
+        #     response['db_host'] = last_successful_load.db_host
+        #     response['db_port'] = last_successful_load.db_port
+        #     response['db_username'] = last_successful_load.db_username
+        #     response['db_password'] = last_successful_load.db_password
+        #     if last_successful_load.db_type == 'PostgreSQL':
+        #         response['db_name'] = last_successful_load.db_name
+        #     elif last_successful_load.db_type == 'Oracle':
+        #         response['db_sid'] = last_successful_load.db_sid
+        #         response['enabled_for_editing'].append("db_sid")
         response['enabled_for_editing'] += ["table_name", "db_type", "db_host", "db_port", "db_username", "db_password", "db_name", "file_id"]
         return response
 
@@ -164,5 +168,15 @@ class UploadedFileView(LoginRequiredMixin, View):
         except Exception as e:
             logger.info(f'File upload #{file_id} cancelling by user {request.user.username} error {str(e)}')
             return JsonResponse({"error": str(e)}, status=400)
+
+
+@method_decorator(csrf_exempt, name='dispatch')
+class UtilsDecodeDBString(LoginRequiredMixin, View):
+    login_url = "/login/"
+    def post(self, request):
+        if "db_connection" in request.POST:
+            return JsonResponse(decode_db_connection(request.POST["db_connection"]))
+        else:
+            return JsonResponse({"error": "No db_connection provided"}, status=400)
 
 

@@ -57,26 +57,7 @@ class DocumentTask(celery.Task):
                 return self.update_with_error(err_string)
             status_string = "Step 3: Uploading file to DBMS..."
             self.update_with_pending(status_string, i)
-        return self.update_with_success()
-
-    # def on_success(self, retval, task_id, *args, **kwargs):
-    #     state = celery.result.AsyncResult(task_id).info
-    #     if retval > 0:
-    #         logger.info(f"File {self.file_id} uploading succeed!")
-    #         document = Document.objects.get(id=self.file_id)
-    #         document.status = 2
-    #         document.log = state['log']
-    #         document.save()
-    #     else:
-    #         state = celery.result.AsyncResult(task_id).info
-    #         error = state['error']
-    #         log = state['log']
-    #         logger.info(f"File {self.file_id} uploading faled; error {error}")
-    #         document = Document.objects.get(id=self.file_id)
-    #         document.status = -1
-    #         document.error = error
-    #         document.log = log
-    #         document.save()            
+        return self.update_with_success()  
 
     def on_failure(self, exc, task_id, args, kwargs, einfo):
         logger.info(f"File {self.file_id} uploading faled; celery error")

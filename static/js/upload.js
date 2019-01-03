@@ -53,6 +53,15 @@ $(document).ready(function() {
         $('#uploadProgressBar').prop('style', 'width: '+percent+'%');
         $('#uploadButtonProgress').html('Uploading '+percent+'%...');
     }
+
+    function changeEditing(element_id, editable) {
+        element = $("#" + element_id);
+        if (editable && element.attr('readonly')) {
+            element.removeAttr('readonly');
+        } else if (!editable && !element.attr('readonly')) {
+            element.prop("readonly", "readonly");
+        }
+    }
     
 
     // Пост обрабочик
@@ -63,17 +72,28 @@ $(document).ready(function() {
                 $('#uploadProgressBar').prop('style', 'width: 100%');
                 var data = $.parseJSON(event.target.response);
                 if (!data['error']) {
+                    selected = $("#db_connection").val();
+                    $("#table-info-form").autofill(data);
+                    $("#file-info-form").autofill(data);
+                    $("#db-info-form").autofill(data);
+                    $("#db_connection").find('option').remove();
+                    $("#db_connection").append(
+                        $('<option value="new-pg">New PostgreSQL</option>'),
+                        $('<option value="new-or">New Oracle</option>')
+                    );
+                    $.each(data['db_connection'], function (key, entry) {
+                        $("#db_connection").append(
+                            $('<option></option>').attr('value', entry.value).text(entry.name)
+                        );
+                    });
+                    $("#db_connection").val(selected);
+                    // delete data['db_connection'];
                     $.each(data, function(key, value){
                         console.log("key: " + key + " " + data['enabled_for_editing'].indexOf(key));
-                        if (data['enabled_for_editing'].indexOf(key) > -1) {
-                            $('#'+key).removeAttr('readonly');
-                            $('#'+key).val(value);
-                        } else {
-                            $('#'+key).val("");
-                            $('#'+key).prop("readonly", "readonly")
-                            $('#'+key).prop('placeholder', value);      
-                        }
-                      });           
+                        editable = (data['enabled_for_editing'].indexOf(key) > -1);
+                        changeEditing(key, editable, undefined)
+                      });
+      
                     selectedFile.text('File is successfully uploaded!');
                     $('#uploadFile').on('click', function(e) {
                         e.preventDefault();
@@ -125,16 +145,48 @@ $(document).ready(function() {
     });
     
     // При выборе PostgreSQL лочится SID
-    $('#db_type').on("change", function() {
-        if($(this).find(":selected").val() == 'PostgreSQL') {
-            $('#db_sid').val('');
-            $('#db_sid').prop('placeholder', 'not applicable');
-            $('#db_sid').prop('readonly', 'readonly');
+    $('#db_connection').on("change", function() {
+        var selected = $(this).find(":selected").val();
+        if (selected != "new-pg" && selected != "new-or") {
+            var form_data = {
+                "db_connection": selected,
+            };
+            $.ajax({
+                dataType: 'json',
+                data: form_data,
+                url: "/api/utils/decode_db_connection/",
+                type: "POST",
+                success: fillDBData
+            }); 
         } else {
-            $('#db_sid').prop('placeholder', '');
-            $('#db_sid').removeAttr('readonly');
+            var data = {
+                "db_username": "",
+                "db_password": "", 
+                "db_host": "", 
+                "db_port": "",
+            };
+            data['db_type'] = (selected == "new-pg" ? "PostgreSQL": "Oracle");
+            data['db_sid'] = (selected == "new-pg" ? "not applicable": "");
+            data['db_name'] = (selected == "new-pg" ? "": "not applicable");
+            fillDBData(data);
         }
     });
+
+    function fillDBData(data) {
+        console.log("Autofill data: ");
+        console.log(data);
+        $("#db-info-form").autofill(data);
+        console.log($("#db_type").val());
+        if ($("#db_type").val() == "PostgreSQL") {
+            console.log("Selected PostgreSQL!");
+            changeEditing("db_name", true, "");
+            changeEditing("db_sid", false, "not applicable");
+        } else if ($("#db_type").val() == "Oracle") {
+            console.log("Selected Oracle!");
+            changeEditing("db_name", false, "not applicable");
+            changeEditing("db_sid", true, "");
+        }
+    }
 
 
 
@@ -200,7 +252,9 @@ $(document).ready(function() {
                 workWithFileShowError(textStatus);
             })         
         } else {
-            alert("You have to upload file before starting");
+            if(!$("#file-id").val()) {
+                alert("You have to upload file before starting");
+            }
         }
     }
 

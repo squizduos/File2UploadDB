@@ -10,7 +10,7 @@ class Migration(migrations.Migration):
     ]
 
     def resave_all_documents(apps, schema_editor):
-        Document = apps.get_model('fileuploader', 'Document')
+        Document = apps.get_model('fileupload', 'Document')
         for document in Document.objects.all():
             document.save()
 

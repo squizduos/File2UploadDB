@@ -18,7 +18,7 @@ from django.urls import include, path
 from django.conf.urls.static import static
 from django.conf import settings
 from authentitcation.views import AdminRegisterView, RegisterView, LoginView, LogoutView
-from fileupload.views import DashboardView, AdminDashboardView, UploadToServerView, UploadToDBView, UploadedFileView, UtilsDecodeDBString
+from fileupload.views import DashboardView, AdminDashboardView, UploadToServerView, UploadToDBView, UploadedFileView, UtilsDecodeDBString, UtilsLoadConnectionsView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -39,6 +39,7 @@ urlpatterns = [
         path('work/<file_id>/', UploadedFileView.as_view(), name='api-work-file'),
         path('utils/', include([
             path("decode_db_connection/", UtilsDecodeDBString.as_view(), name="api-utils-decodeconn"),
+            path("load_connections/", UtilsLoadConnectionsView.as_view(), name="api-utils-loadconns"),
         ])),
         # path('login/', UploadToDBView.as_view(), name='api-login'),
         # path('logout/', UploadToDBView.as_view(), name='api-login'),

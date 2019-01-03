@@ -75,11 +75,11 @@ class UploadToServerView(LoginRequiredMixin, View):
             response['file_header_line'] = 'not applicable'
             response['file_separator'] = 'not applicable'
         response['table_name'] = filename
-        response['db_connection'] = []
-        db_connections = list(Document.objects.filter(user=model.user, status=2).values_list('db_connection', flat=True).distinct())
-        for conn in db_connections:
-            fields = decode_db_connection(conn)
-            response['db_connection'].append({"name": f"{fields['db_type']} ({fields['db_host']}), by user {fields['db_username']}, to db {fields['db_name'] if fields['db_type'] == 'PostgreSQL' else fields['db_sid']}", "value": conn})
+        # response['db_connection'] = []
+        # db_connections = list(Document.objects.filter(user=model.user, status=2).values_list('db_connection', flat=True).distinct())
+        # for conn in db_connections:
+        #     fields = decode_db_connection(conn)
+        #     response['db_connection'].append({"name": f"{fields['db_type']} ({fields['db_host']}), by user {fields['db_username']}, to db {fields['db_name'] if fields['db_type'] == 'PostgreSQL' else fields['db_sid']}", "value": conn})
         response['enabled_for_editing'] += ["table_name", "db_type", "db_host", "db_port", "db_username", "db_password", "db_name", "file_id"]
         return response
 
@@ -169,3 +169,25 @@ class UtilsDecodeDBString(LoginRequiredMixin, View):
             return JsonResponse({"error": "No db_connection provided"}, status=400)
 
 
+@method_decorator(csrf_exempt, name='dispatch')
+class UtilsLoadConnectionsView(LoginRequiredMixin, View):
+    login_url = "/login/"
+
+    def get(self, request):
+        response = {
+            'connections': []
+        }
+        db_connections = list(Document.objects.filter(
+            user=request.user,
+            status=2
+        ).values_list('db_connection', flat=True).distinct())
+        for conn in db_connections:
+            fields = decode_db_connection(conn)
+            response['connections'].append({
+                "name": (
+                    f"{fields['db_type']} ({fields['db_host']}), "
+                    f"by user {fields['db_username']}, "
+                    f"to db {fields['db_name'] if fields['db_type'] == 'PostgreSQL' else fields['db_sid']}"
+                ), "value": conn
+            })
+        return JsonResponse(response)

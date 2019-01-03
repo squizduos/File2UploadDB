@@ -73,22 +73,9 @@ $(document).ready(function() {
                 $('#uploadProgressBar').prop('style', 'width: 100%');
                 var data = $.parseJSON(event.target.response);
                 if (!data['error']) {
-                    selected = $("#db_connection").val();
                     $("#table-info-form").autofill(data);
                     $("#file-info-form").autofill(data);
                     $("#db-info-form").autofill(data);
-                    $("#db_connection").find('option').remove();
-                    $("#db_connection").append(
-                        $('<option value="new-pg">New PostgreSQL</option>'),
-                        $('<option value="new-or">New Oracle</option>')
-                    );
-                    $.each(data['db_connection'], function (key, entry) {
-                        $("#db_connection").append(
-                            $('<option></option>').attr('value', entry.value).text(entry.name)
-                        );
-                    });
-                    $("#db_connection").val(selected);
-                    // delete data['db_connection'];
                     $.each(data, function(key, value){
                         console.log("key: " + key + " " + data['enabled_for_editing'].indexOf(key));
                         editable = (data['enabled_for_editing'].indexOf(key) > -1);
@@ -172,6 +159,30 @@ $(document).ready(function() {
             fillDBData(data);
         }
     });
+    
+    function loadConnections() {
+        $.ajax({
+            dataType: 'json',
+            url: "/api/utils/load_connections/",
+            type: "GET",
+            success: function(data) {
+                selected = $("#db_connection").val();
+                $("#db_connection").find('option').remove();
+                $("#db_connection").append(
+                    $('<option value="new-pg">New PostgreSQL</option>'),
+                    $('<option value="new-or">New Oracle</option>')
+                );
+                $.each(data['connections'], function (key, entry) {
+                    $("#db_connection").append(
+                        $('<option></option>').attr('value', entry.value).text(entry.name)
+                    );
+                });
+                $("#db_connection").val(selected);
+            }
+        }); 
+    }
+
+    loadConnections();
 
     function fillDBData(data) {
         console.log("Autofill data: ");
@@ -234,10 +245,21 @@ $(document).ready(function() {
         $("#db-info-form").validate(validateRules);
         if ($("#file-info-form").valid() &&  $("#table-info-form").valid() && $("#db-info-form").valid()) {
             var form_data = {};
-            data = $('[id*="db_"],[id*="file_"],[id*="table_"]').not('[readonly]');
-            for (i = 0; i < data.length; i++) {
-                form_data[data[i].id] = data[i].value;
-            }
+            $("#file-info-form").serializeArray().map(
+                (el) => {
+                    form_data[el.name] = el.value;
+                }
+            );
+            $("#table-info-form").serializeArray().map(
+                (el) => {
+                    form_data[el.name] = el.value;
+                }
+            );
+            $("#db-info-form").serializeArray().map(
+                (el) => {
+                    form_data[el.name] = el.value;
+                }
+            );
             $('#workProgessBarDiv').prop('style', "display: block");
             var request = $.ajax({
                 dataType: 'json',

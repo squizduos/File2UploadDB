@@ -252,7 +252,7 @@ $(document).ready(function() {
                 workWithFileShowError(textStatus);
             })         
         } else {
-            if(!$("#file-id").val()) {
+            if(!$("#file_id").val()) {
                 alert("You have to upload file before starting");
             }
         }

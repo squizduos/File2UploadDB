@@ -79,18 +79,7 @@ class UploadToServerView(LoginRequiredMixin, View):
         db_connections = list(Document.objects.filter(user=model.user, status=2).values_list('db_connection', flat=True).distinct())
         for conn in db_connections:
             fields = decode_db_connection(conn)
-            response['db_connection'].append({"name": f"{fields['db_type']} ({fields['db_host']})", "value": conn})
-        # for load in succ:
-        #     response['db_type'] = last_successful_load.db_type
-        #     response['db_host'] = last_successful_load.db_host
-        #     response['db_port'] = last_successful_load.db_port
-        #     response['db_username'] = last_successful_load.db_username
-        #     response['db_password'] = last_successful_load.db_password
-        #     if last_successful_load.db_type == 'PostgreSQL':
-        #         response['db_name'] = last_successful_load.db_name
-        #     elif last_successful_load.db_type == 'Oracle':
-        #         response['db_sid'] = last_successful_load.db_sid
-        #         response['enabled_for_editing'].append("db_sid")
+            response['db_connection'].append({"name": f"{fields['db_type']} ({fields['db_host']}), by user {fields['db_username']}, to db {fields['db_name'] if fields['db_type'] == 'PostgreSQL' else fields['db_sid']}", "value": conn})
         response['enabled_for_editing'] += ["table_name", "db_type", "db_host", "db_port", "db_username", "db_password", "db_name", "file_id"]
         return response
 

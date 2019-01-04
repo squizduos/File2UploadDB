@@ -8,10 +8,11 @@ from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
 from django.http import JsonResponse
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
+from django.core.serializers import serialize
 
 from .forms import DocumentUpdateForm, DocumentUploadForm
 from .models import Document
-from .utils import file_read_from_tail
+from .utils import file_read_from_tail, decode_db_connection, encode_db_connection
 from .tasks import DocumentTask
 
 from celery.result import AsyncResult
@@ -45,7 +46,11 @@ class UploadToServerView(LoginRequiredMixin, View):
     login_url = "/login/"
 
     def prepare_uploaded_file(self, model):
-        response = {'file_id': model.id, 'file_storage': model.file_storage, 'enabled_for_editing': ['file_type']}
+        response = {}
+        response['enabled_for_editing'] = ['file_type']
+
+        response['file_id'] = model.id, 
+        response['file_storage'] = model.file_storage
         response['file_path'] = model.document.path
         response['file_name'] = os.path.basename(model.document.name)
         filename, extension = os.path.splitext(model.original_filename)
@@ -54,30 +59,28 @@ class UploadToServerView(LoginRequiredMixin, View):
         else:
             response['file_type'] = 'CSV'
         if response['file_type'] == 'CSV':
+            response['file_header_line'] = ""
+            response['file_separator'] = ""
             response['enabled_for_editing'].append('file_header_line')
             response['enabled_for_editing'].append('file_separator')
         elif response['file_type'] == 'XLS':
+            response['file_header_line'] = ""
             response['enabled_for_editing'].append('file_header_line')
             response['file_separator'] = 'not applicable'
         elif response['file_type'] == 'XLSX':
+            response['file_header_line'] = ""
             response['enabled_for_editing'].append('file_header_line')
             response['file_separator'] = 'not applicable'
         elif response['file_type'] == 'DTA':
             response['file_header_line'] = 'not applicable'
             response['file_separator'] = 'not applicable'
         response['table_name'] = filename
-        last_successful_load = Document.objects.filter(user=model.user, status=2).last()
-        if last_successful_load:
-            response['db_type'] = last_successful_load.db_type
-            response['db_host'] = last_successful_load.db_host
-            response['db_port'] = last_successful_load.db_port
-            response['db_username'] = last_successful_load.db_username
-            response['db_password'] = last_successful_load.db_password
-            if last_successful_load.db_type == 'PostgreSQL':
-                response['db_name'] = last_successful_load.db_name
-            elif last_successful_load.db_type == 'Oracle':
-                response['db_sid'] = last_successful_load.db_sid
-                response['enabled_for_editing'].append("db_sid")
+        # response['db_connection'] = []
+        # db_connections = list(Document.objects.filter(user=model.user, status=2).values_list('db_connection', flat=True).distinct())
+        # for conn in db_connections:
+        #     fields = decode_db_connection(conn)
+        #     response['db_connection'].append({"name": f"{fields['db_type']} ({fields['db_host']}), by user {fields['db_username']}, to db {fields['db_name'] if fields['db_type'] == 'PostgreSQL' else fields['db_sid']}", "value": conn})
+        response['enabled_for_editing'] += ["table_name", "db_type", "db_host", "db_port", "db_username", "db_password", "db_name", "file_id"]
         return response
 
     def post(self, request):
@@ -110,10 +113,7 @@ class UploadToDBView(LoginRequiredMixin, View):
         except Exception as e:
             logger.info(f'File preparing #{data["file_id"]} by user {request.user.username} error; file not found')
             return JsonResponse({"error": "File not found"}, status=404)
-        if data['file_header_line'] == 'not applicable':
-            data['file_header_line'] = ""
-        if data['file_separator'] == 'not applicable':
-            data['file_separator'] = ""
+
         form = DocumentUpdateForm(data, instance=document)
         if form.is_valid():
             model = form.save(commit=False)
@@ -141,9 +141,7 @@ class UploadedFileView(LoginRequiredMixin, View):
         except Exception as e:
             logger.info(f'File checking status #{data["file_id"]} by user {request.user.username} error; file not found')
             return JsonResponse({"status": -1, "error": "File not found"}, status=404)
-        info = AsyncResult(document.task_id).info
-        response = {"status": document.status}
-        if info: response.update(**info)
+        response = {"status": document.status, "error": document.error, "percent": document.percent}
         return JsonResponse(response)
 
     def delete(self, request, file_id):
@@ -161,3 +159,35 @@ class UploadedFileView(LoginRequiredMixin, View):
             return JsonResponse({"error": str(e)}, status=400)
 
 
+@method_decorator(csrf_exempt, name='dispatch')
+class UtilsDecodeDBString(LoginRequiredMixin, View):
+    login_url = "/login/"
+    def post(self, request):
+        if "db_connection" in request.POST:
+            return JsonResponse(decode_db_connection(request.POST["db_connection"]))
+        else:
+            return JsonResponse({"error": "No db_connection provided"}, status=400)
+
+
+@method_decorator(csrf_exempt, name='dispatch')
+class UtilsLoadConnectionsView(LoginRequiredMixin, View):
+    login_url = "/login/"
+
+    def get(self, request):
+        response = {
+            'connections': []
+        }
+        db_connections = list(Document.objects.filter(
+            user=request.user,
+            status=2
+        ).values_list('db_connection', flat=True).distinct())
+        for conn in db_connections:
+            fields = decode_db_connection(conn)
+            response['connections'].append({
+                "name": (
+                    f"{fields['db_type']} ({fields['db_host']}), "
+                    f"by user {fields['db_username']}, "
+                    f"to db {fields['db_name'] if fields['db_type'] == 'PostgreSQL' else fields['db_sid']}"
+                ), "value": conn
+            })
+        return JsonResponse(response)

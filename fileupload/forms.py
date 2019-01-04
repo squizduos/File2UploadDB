@@ -11,4 +11,4 @@ class DocumentUploadForm(forms.ModelForm):
 class DocumentUpdateForm(forms.ModelForm):
     class Meta:
         model = Document
-        exclude = ('original_filename', 'document', 'user', 'error', 'status', 'uploading_percent')
+        exclude = ('original_filename', 'document', 'user', 'error', 'status', 'percent')

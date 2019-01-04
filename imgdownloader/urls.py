@@ -40,6 +40,7 @@ schema_view = get_schema_view(
    permission_classes=(permissions.AllowAny,),
 )
 
+from fileupload.views import DashboardView, AdminDashboardView, UploadToServerView, UploadToDBView, UploadedFileView, UtilsDecodeDBString, UtilsLoadConnectionsView
 
 urlpatterns = [
     re_path(r'^swagger(?P<format>\.json|\.yaml)$', schema_view.without_ui(cache_timeout=0), name='schema-json'),
@@ -70,6 +71,14 @@ urlpatterns = [
         path('upload/', UploadToServerView.as_view(), name='api-upload'),
         path('work/', UploadToDBView.as_view(), name="api-start-work"),
         path('work/<file_id>/', UploadedFileView.as_view(), name='api-work-file'),
+        path('utils/', include([
+            path("decode_db_connection/", UtilsDecodeDBString.as_view(), name="api-utils-decodeconn"),
+            path("load_connections/", UtilsLoadConnectionsView.as_view(), name="api-utils-loadconns"),
+        ])),
+        # path('login/', UploadToDBView.as_view(), name='api-login'),
+        # path('logout/', UploadToDBView.as_view(), name='api-login'),
+        # path('admin/register', UploadToDBView.as_view(), name='api-login'),
+        # path('register/', UploadToDBView.as_view(), name='api-login'),
     ])),
 ]
 

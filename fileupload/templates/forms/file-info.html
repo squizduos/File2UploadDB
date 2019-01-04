@@ -19,10 +19,10 @@
             <div class="form-group">
                 <label for="file_type">file type:</label>
                 <select class="form-control" id="file_type" name="file_type" readonly="readonly" required>
-                    <option>CSV</option>
-                    <option>XLS</option>
-                    <option>XLSX</option>
-                    <option>DTA</option>
+                    <option value="CSV">CSV</option>
+                    <option value="XLS">XLS</option>
+                    <option value="XLSX">XLSX</option>
+                    <option value="DTA">DTA</option>
                 </select>
             </div>
             <div class="form-group">
@@ -33,7 +33,7 @@
             <div class="form-group">
                 <label for="file_separator">separator:</label>
                 <i class="fa fa-info-circle" data-toggle="popover" title="Separator" data-content="Delimiter to use. If sep is None, the C engine cannot automatically detect the separator, but the Python parsing engine can, meaning the latter will be used and automatically detect the separator by Python’s builtin sniffer tool,csv.Sniffer. In addition, separators longer than 1 character and different from '\s+' will be interpreted as regular expressions and will also force the use of the Python parsing engine. Note that regex delimiters are prone to ignoring quoted data. Regex example: '\\r\\t'."></i>
-                <input size="15" maxlength="15" class="form-control " id="file_separator" name="file_separator" readonly="readonly" required minlength="1" type="text">
+                <input size="8" maxlength="8" class="form-control " id="file_separator" name="file_separator" readonly="readonly" required minlength="1" type="text">
             </div>
                     
         </form>                            

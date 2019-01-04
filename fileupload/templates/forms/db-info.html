@@ -2,21 +2,22 @@
     <div class="col-lg-12">
         <h3>Database</h3>
         <hr>
-        <form id="db-info-form" role="form" style="display: block;">                        
+        <form id="db-info-form" role="form" style="display: block;">
             <div class="form-group">
-                <label for="file_path">type:</label>
-                <select class="form-control" id="db_type" name="file_type">
-                    <option>PostgreSQL</option>
-                    <option>Oracle</option>
+                <label for="db_connection">type:</label>
+                <select class="form-control" id="db_connection" name="db_connection">
+                    <option value="new-pg" selected>New PostgreSQL</option>
+                    <option value="new-or">New Oracle</option>
                 </select>
-            </div>
+            </div>                        
+            <input minlength="1" type="hidden" id="db_type" name="db_type" value="PostgreSQL" required>
             <div class="form-group">
                 <label for="db_username">username:</label>
                 <input minlength="1" type="text" class="form-control" id="db_username" name="db_username" required>
             </div>
             <div class="form-group">
                 <label for="db_password">password:</label>
-                <input minlength="1" type="text" class="form-control" id="db_password" name="db_password" required>
+                <input minlength="1" type="password" class="form-control" id="db_password" name="db_password" required>
             </div>
             <div class="form-group">
                 <label for="db_host">ip address:</label>
@@ -28,7 +29,7 @@
             </div>
             <div class="form-group">
                 <label for="db_sid">SID:</label>
-                <input minlength="1" type="text" class="form-control" id="db_sid" name="db_sid" disabled value="not applicable" required>
+                <input minlength="1" type="text" class="form-control" id="db_sid" name="db_sid" readonly placeholder="not applicable" required>
             </div>
             <div class="form-group">
                 <label for="db_name">db:</label>

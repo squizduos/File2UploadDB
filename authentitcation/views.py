@@ -38,7 +38,7 @@ class LoginView(View):
             logger.info(f'User {username} successfully logged in')
             return redirect('dashboard')
         else:
-            logger.info(f'User {{username}} trying to log in, incorrect username or password')
+            logger.info(f'User {username} trying to log in, incorrect username or password')
             return render(request, 'login.html', context={"login_errors": "Username or password is incorrect"})
 
 @method_decorator(csrf_exempt, name='dispatch')

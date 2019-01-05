@@ -113,10 +113,18 @@ class RegistrationByAdminView(views.APIView):
         """
         serializer = serializers.UserCreateRequestSerializer(data=request.data)
         if serializer.is_valid():
-            user = serializer.save()
-            send_registration_email.delay(user.id)
+            try:
+                user = serializer.save()
+                send_registration_email.delay(user.id)
+            except Exception as e:
+                logger.info(
+                    f'[# System] User {serializer.data} can\'t be registered, error {e}'
+                )
+                return Response({'non_field_errors': [str(e)]}, status=400)
+            logger.info(f'[# System] User {serializer.data.get("username")} is successfully registered')
             return Response({'registered': True}, status=201)
         else:
+            logger.info(f'[# System] Incorrect request on AdminRegister API endpoint')
             return Response(serializer.errors, status=400)
 
 
@@ -146,6 +154,8 @@ class RegistrationView(views.APIView):
             user.set_password(serializer.data.get("password"))
             user.login_hash = ""
             user.save()
+            logger.info(f'[# System] User {user.username} password is successfully set')
             return Response({'registered': True}, status=200)
         else:
+            logger.info(f'[# System] Incorrect request on Register API endpoint, errors {serializer.errors}')
             return Response(serializer.errors, status=400)

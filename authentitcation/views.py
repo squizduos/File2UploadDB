@@ -129,6 +129,7 @@ class RegistrationByAdminView(views.APIView):
 
 
 class RegistrationView(views.APIView):
+    authentication_classes = ()
     permission_classes = (permissions.AllowAny,)
 
     @swagger_auto_schema(

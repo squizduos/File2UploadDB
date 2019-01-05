@@ -99,6 +99,18 @@ class DocumentUploadResponseSerializer(serializers.ModelSerializer):
 
 
 class DocumentUpdateSerializer(serializers.ModelSerializer):
+    file_type = serializers.CharField(required=True)
+    file_header_line = serializers.CharField(required=True)
+    file_separator = serializers.CharField(required=True)
+    table_name = serializers.CharField(required=True)
+    db_type = serializers.CharField(required=True)
+    db_username = serializers.CharField(required=True)
+    db_password = serializers.CharField(required=True)
+    db_host = serializers.CharField(required=True)
+    db_port = serializers.CharField(required=True)
+    db_sid = serializers.CharField(required=True)
+    db_name = serializers.CharField(required=True)
+
     class Meta:
         model = Document
         fields = [
@@ -119,8 +131,8 @@ class DocumentUpdateSerializer(serializers.ModelSerializer):
 class DocumentStatusSerializer(serializers.ModelSerializer):
     class Meta:
         model = Document
-        fields = ['status', 'error', 'percent']
-        read_only_fields = ['status', 'error', 'percent']
+        fields = ['id', 'status', 'error', 'percent']
+        read_only_fields = ['id', 'status', 'error', 'percent']
 
 
 class DocumentRequestSerializer(serializers.ModelSerializer):

@@ -76,7 +76,7 @@ urlpatterns = [
             path('<document_id>/', upload_api_views.DocumentAPIView.as_view(), name='api-upload-with-id'),
         ])),
         path('utils/', include([
-            path("decode_db_connection/", csrf_exempt(upload_api_views.UtilsDecodeDBString.as_view()), name="api-utils-decodeconn"),
+            path("decode_db_connection/", upload_api_views.UtilsDecodeDBString.as_view(), name="api-utils-decodeconn"),
             path("load_connections/", upload_api_views.UtilsLoadConnectionsView.as_view(), name="api-utils-loadconns"),
         ])),
     ])),

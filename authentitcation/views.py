@@ -23,6 +23,7 @@ class LoginAPIView(rest_auth_views.LoginView):
             400: "Validation and login errors",
             500: "Server errors"
         },
+        security=[], 
         tags=['auth']
     )    
     def post(self, request, *args, **kwargs):

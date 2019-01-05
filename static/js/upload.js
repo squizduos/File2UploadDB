@@ -1,93 +1,161 @@
 $(document).ready(function() {
-    function getCookie(name) {
-        var nameEQ = name + "=";
-        var ca = document.cookie.split(';');
-        for(var i=0;i < ca.length;i++) {
-            var c = ca[i];
-            while (c.charAt(0)==' ') c = c.substring(1,c.length);
-            if (c.indexOf(nameEQ) == 0) return c.substring(nameEQ.length,c.length);
-        }
-        return null;
-    }
-
-    // $.ajaxSetup({
-    //     beforeSend: function(xhr) {
-            // xhr.setRequestHeader("Authorization", "Token " + getCookie('token'));
-    //     }
-    // });
-
-    var selectedFile = $('#selectedFile');
+    // Defining constants
     var timeout = 1000;
 
-    function addNewFile(event) {
-        $("input:file").change(function (){
-            uploadFile(event);
-        });
+    var extensions_config = {
+        "CSV": {
+            "file_header_line": "",
+            "file_separator": ""
+        },
+        "XLS": {
+            "file_header_line": "",
+            "file_separator": "not applicable"
+        },
+        "CSV": {
+            "file_header_line": "",
+            "file_separator": "not applicable"
+        },
+        "CSV": {
+            "file_header_line": "not applicable",
+            "file_separator": "not applicable"
+        },
     }
 
-    // Отображение файла при обычной загрузке
+    // Defining progress bar monitors
+
+    uploadProgressBarMonitor = new ProgressBarAJAXConnector(
+        $('#uploadProgressBar'),
+        {
+            "startAjax": {},
+            "monitorAjax": {},
+            "fields": {},
+            "texts": {},
+            "actions": {}
+        },
+        timeout
+    );
+
+    workProgressBarMonitor = new ProgressBarAJAXConnector(
+        $('#workProgessBar'),
+        {
+            "startAjax": {
+                "url": '/api/upload/%s/',
+                "method": "PUT",
+                "beforeSend": function(xhr) {
+                    xhr.setRequestHeader("Authorization", "Token " + getCookie('token'));
+                }
+            },
+            "monitorAjax": {
+                "url": '/api/upload/%s/',
+                "method": "GET",
+                "beforeSend": function(xhr) {
+                    xhr.setRequestHeader("Authorization", "Token " + getCookie('token'));
+                }
+            },
+            "fields": {
+                "id_field": "id"
+            },
+            "texts": {
+                "onLaunch": "Starting upload...",
+                "onMonitor": "Uploading %s%",
+                "onFinish": "File uploaded successfully!",
+                "onError": "Error uploading to DBMS: %s",
+            },
+            "actions": {
+                "onFinish": function(){
+                    $('#afterUploadToDB').prop('style', 'display: block'); 
+                },
+            }
+        },
+        timeout
+    );;
+
+    // UI elements behaviour
+
     $("input:file").change(function (){
         uploadFile(event);
     });
 
-    // Разблокировка загрузчика при выборе галочки
     $('#agreeToRegulations').change(function() {
-        if (this.checked) {
-            $('#uploadFile').prop('disabled', false);
-            $('#uploadStart').prop('disabled', false);
-        } else {
-            $('#uploadStart').prop('disabled', true);
-            if ($("#uploadFile").text() != "Remove") {
-                $('#uploadFile').prop('disabled', true);
+        $('#uploadFile, #uploadStart').prop('disabled', !this.checked);
+    });
+
+    $('#file_type').on('change', function() {
+        var extension = $(this).find(":selected").val();
+        if ($("#file_id").text().length > 0) {  
+            for (var key in extensions_config[extension]) {
+                if (extensions_config[extension][key] == 'not applicable') {
+                    $('#'+key).val(extensions_config[extension][key]);
+                    $('#'+key).attr('readonly', 'readonly');
+                } else {
+                    $('#'+key).val('');
+                    $('#'+key).removeAttr('readonly');
+                }
             }
         }
     });
 
+    $('#db_connection').on("change", function() {
+        var selected = $(this).find(":selected").val();
+        var form_data = {
+            "db_connection": selected,
+        };
+        apiDecodeDBConnection(form_data, webFillDBForm);
+    });
 
-    // Аплоад файла
+    $("#uploadStart").click(function (event){
+        event.preventDefault();
+        apiUploadFiletoDBMS(event);
+    });
+
+    $("#clearAll").click(function (event){
+        event.preventDefault();
+        apiDeleteFile(
+            alertDeleteError,
+            window.location.reload(false)
+        );
+    });
+
+    $("#addNew").click(function (event){
+        event.preventDefault();
+        apiDeleteFile(
+            alertDeleteError,
+            webResetUploadFile 
+        )
+    });
+
+    $('#removeFile').on('click', function(e) {
+        e.preventDefault();
+        apiDeleteFile(
+            alertDeleteError,
+            window.location.reload(false)
+        );
+    });
+
+    // Upload file to server
+
     function uploadFile(event) {
         var fileName = $("input:file").val();
         var file = $("input:file")[0].files[0];
-
         var form_data = new FormData();
         form_data.append("document", file);
         var xhr = new XMLHttpRequest();
-        xhr.upload.addEventListener('progress', uploadProgress, false);
-        xhr.onreadystatechange = stateChange;
+        xhr.upload.addEventListener('progress', uploadFileProgress, false);
+        xhr.onreadystatechange = uploadFileFinished;
         xhr.open('POST', '/api/upload/');
         xhr.setRequestHeader("Authorization", "Token " + getCookie('token'));
         xhr.send(form_data);
+        webSwitchUploadRemoveButton("remove");
     }
     
-    // Показываем процент загрузки
-    function uploadProgress(event) {
+    function uploadFileProgress(event) {
         var percent = parseInt(event.loaded / event.total * 100);
-        $('#progessBarDiv').prop('style', "display: block");
-        $('#uploadButtonDiv').prop('class', "col-lg-3");
-        $('#uploadFile').prop('style', "");
-
-        $('#uploadProgressBar').prop('aria-valuenow', percent);
-        $('#uploadProgressBar').prop('style', 'width: '+percent+'%');
-        $('#uploadButtonProgress').html('Uploading '+percent+'%...');
+        uploadProgressBarMonitor.setProgressBarState("launch", "", percent);
     }
 
-    function changeEditing(element_id, editable) {
-        element = $("#" + element_id);
-        if (editable && element.attr('readonly')) {
-            element.prop("placeholder", "");
-            element.removeAttr('readonly');
-        } else if (!editable && !element.attr('readonly')) {
-            element.prop("readonly", "readonly");
-        }
-    }
-    
-
-    // Пост обрабочик
-    function stateChange(event) {
+    function uploadFileFinished(event) {
         if (event.target.readyState == 4) {
             if (event.target.status == 201) {
-                $('#uploadProgressBar').prop('aria-valuenow', 100);
-                $('#uploadProgressBar').prop('style', 'width: 100%');
                 var data = $.parseJSON(event.target.response);
                 if (!data['error']) {
                     $("#table-info-form").autofill(data);
@@ -95,87 +163,74 @@ $(document).ready(function() {
                     $("#db-info-form").autofill(data);
                     $.each(data, function(key, value){
                         editable = (data['enabled_for_editing'].indexOf(key) > -1);
-                        changeEditing(key, editable, undefined)
-                      });
-      
-                    selectedFile.text('File is successfully uploaded!');
-                    $('#uploadFile').on('click', function(e) {
-                        e.preventDefault();
-                        deleteFile(
-                            event,
-                            onSuccess=function(e) {
-                                window.location.reload(false);
-                            }
-                        );
+                        webChangeEditing(key, editable, undefined)
                     });
-                    $('#uploadFile').html('Remove');
-                    $('#uploadFile').prop('class', 'btn btn-danger btn-lg');    
+                    uploadProgressBarMonitor.setProgressBarState("finish", "File is successfully uploaded!");
+                    webSwitchUploadRemoveButton("remove");
                 } else {
-                    $('#uploadProgressBar').removeClass("progress-bar-success");
-                    $('#uploadProgressBar').addClass("progress-bar-danger");
-                    selectedFile.text('Error on uploading; try again later or check format!');
-                    selectedFile.addClass('error');    
+                    uploadProgressBarMonitor.setProgressBarState("error", "Error on uploading; try again later or check format!");    
                 }
             } else {
-                $('#uploadProgressBar').removeClass("progress-bar-success");
-                $('#uploadProgressBar').addClass("progress-bar-danger");
-                selectedFile.text('Error on uploading; try again later!');
-                selectedFile.addClass('error');
+                uploadProgressBarMonitor.setProgressBarState("error", "Error on uploading; try again later!");    
             }
         }
     }
 
-    $('#file_type').on('change', function() {
-        if ($("#uploadFile").text() == "Remove") {        
-            if($(this).find(":selected").val() == 'CSV') {
-                $('#file_header_line').val('');
-                $('#file_header_line').removeAttr('readonly');
-                $('#file_separator').val('');
-                $('#file_separator').removeAttr('readonly');
-            } else if ($(this).find(":selected").val() == 'XLS') {
-                $('#file_header_line').val('');
-                $('#file_header_line').removeAttr('readonly');
-                $('#file_separator').val('not applicable');
-                $('#file_separator').prop('readonly', 'readonly');
-            } else if ($(this).find(":selected").val() == 'XLSX') {
-                $('#file_header_line').val('');
-                $('#file_header_line').removeAttr('readonly');
-                $('#file_separator').val('not applicable');
-                $('#file_separator').prop('readonly', 'readonly');
+    // API functions
 
-            } else if ($(this).find(":selected").val() == 'DTA') {
-                $('#file_header_line').val('not applicable');
-                $('#file_header_line').prop('readonly', 'readonly');
-                $('#file_separator').val('not applicable');
-                $('#file_separator').prop('readonly', 'readonly');
-            }
-        }
-    });
-
-    function apiDecodeDBConnection(form_data) {
+    // Decode DB Connection
+    function apiDecodeDBConnection(form_data, onSuccess, onError) {
+        $.ajax({
+            dataType: 'json',
+            contentType: "application/json",
+            data: JSON.stringify(form_data),
+            url: "/api/utils/decode_db_connection/",
+            type: "POST",
+            success: onSuccess,
+            error: onError
+        }); 
+    }
+    
+    // API: Delete file
+    function apiDeleteFile(onError, onSuccess) {
+        var file_id = $('[id=file_id]')[0].value;
         $.ajax({
             beforeSend: function(xhr) {
                 xhr.setRequestHeader("Authorization", "Token " + getCookie('token'));
             },
             dataType: 'json',
             contentType: "application/json",
-            data: JSON.stringify(form_data),
-            url: "/api/utils/decode_db_connection/",
-            type: "POST",
-            success: fillDBData
-        }); 
+            url: "/api/upload/"+file_id+"/",
+            type: "DELETE",
+            error: function(e) {
+                onError();
+            },
+            success: function(data) {
+                if (data['deleted'] == true) {
+                    onSuccess();
+                } else {
+                    console.log(data);
+                    onError();
+                }
+            },
+        });
+    }
+
+    // API: Upload file to DBMS
+    function apiUploadFiletoDBMS(event) {
+        form_data = formValidateAndCollectData();
+        if (form_data != undefined) {
+            $('#workProgessBarDiv').prop('style', "display: block");
+            workProgressBarMonitor.start(form_data.file_id, form_data);       
+        } else {
+            if(!form_data.file_id) {
+                alert("You have to upload file before starting");
+            }
+        }
     }
     
-    // При выборе PostgreSQL лочится SID
-    $('#db_connection').on("change", function() {
-        var selected = $(this).find(":selected").val();
-        var form_data = {
-            "db_connection": selected,
-        };
-        apiDecodeDBConnection(form_data);
-    });
-    
-    function loadConnections() {
+    // API: Load connections list
+    function apiLoadConnections(onSuccess, onError) {
         $.ajax({
             beforeSend: function(xhr) {
                 xhr.setRequestHeader("Authorization", "Token " + getCookie('token'));
@@ -185,62 +240,14 @@ $(document).ready(function() {
             url: "/api/utils/load_connections/",
             type: "GET",
             success: function(data) {
-                selected = $("#db_connection").val();
-                $("#db_connection").find('option').remove();
-                $.each(data['connections'], function (key, entry) {
-                    $("#db_connection").append(
-                        $('<option></option>').attr('value', entry.value).text(entry.name)
-                    );
-                });
-                $("#db_connection").val(selected);
-            }
-        }); 
-    }
-
-    loadConnections();
-
-    function fillDBData(data) {
-
-        $("#db-info-form").autofill(data);
-        if ($("#db_type").val() == "PostgreSQL") {
-            changeEditing("db_name", true, "");
-            changeEditing("db_sid", false, "not applicable");
-        } else if ($("#db_type").val() == "Oracle") {
-            changeEditing("db_name", false, "not applicable");
-            changeEditing("db_sid", true, "");
-        }
-    }
-
-
-
-    // Загрузка файла
-    $("#uploadStart").click(function (event){
-        event.preventDefault();
-        workWithFile(event);
-    });
-
-    function deleteFile(event, onError, onSuccess, onDone) {
-        var file_id = $('[id=file_id]')[0].value;
-        var request = $.ajax({
-            beforeSend: function(xhr) {
-                xhr.setRequestHeader("Authorization", "Token " + getCookie('token'));
+                onSuccess(data['connections'])
             },
-            dataType: 'json',
-            contentType: "application/json",
-            url: "/api/upload/"+file_id+"/",
-            type: "DELETE",
-            error: onError,
-            success: onSuccess,
-            async: false,
-        });
-        request.done(function() {
-            if (typeof onDone === "function") {
-                onDone();
-            }
+            error: onError
         }); 
     }
 
-    function validateAndCollectData() {
+    function formValidateAndCollectData() {
+        var forms = ["file-info-form", "table-info-form", "db-info-form"];
         var validateRules = {
             highlight: function(element) {
                 $(element).parent().addClass("has-error");
@@ -254,164 +261,91 @@ $(document).ready(function() {
             debug: true,
             ignore: "[readonly=readonly]"
         };
-        $("#file-info-form").validate(validateRules);
-        $("#table-info-form").validate(validateRules);
-        $("#db-info-form").validate(validateRules);
-        if ($("#file-info-form").valid() &&  $("#table-info-form").valid() && $("#db-info-form").valid()) {
+        for (i in forms) {
+            $("#"+forms[i]).validate(validateRules);
+        }
+        var valid = true;
+        for (i in forms) {
+            form_valid = $("#"+forms[i]).valid();
+            valid = (form_valid == false ? false : valid);
+        }
+        if (valid) {
             var form_data = {};
-            $("#file-info-form").serializeArray().map(
-                (el) => {
-                    form_data[el.name] = el.value;
-                }
-            );
-            $("#table-info-form").serializeArray().map(
-                (el) => {
-                    form_data[el.name] = el.value;
-                }
-            );
-            $("#db-info-form").serializeArray().map(
-                (el) => {
-                    form_data[el.name] = el.value;
-                }
-            );
+            for (i in forms) {
+                $("#"+forms[i]).serializeArray().map(
+                    (el) => {form_data[el.name] = el.value}
+                );
+            }
             return form_data;                     
         } else {
             return undefined;
         }
     }
-
-    function sendStartUploadToDBMSRequest(form_data) {
-        $.ajax({
-            beforeSend: function(xhr) {
-                xhr.setRequestHeader("Authorization", "Token " + getCookie('token'));
-            },
-            dataType: 'json',
-            contentType: "application/json",
-            url: "/api/upload/" + form_data.file_id + '/',
-            data: JSON.stringify(form_data),
-            type: "PUT",
-            error: workWithFileShowError,
-            success: workWithFileCheckStatus(form_data.file_id),
-            success: function() {
-                $('#workProgessBar').removeClass("progress-bar-danger");
-                $('#workProgessBar').removeClass("progress-bar-success");
-                $('#workProgessBar').prop('aria-valuenow', 0);
-                $('#workProgessBar').prop('style', 'width: 0%');
-                workWithFileCheckStatus(form_data.file_id);   
-            }
-        }); 
-    }
     
-    function workWithFile(event) {
-        form_data = validateAndCollectData();
-        if (form_data != undefined) {
-            $('#workProgessBarDiv').prop('style', "display: block");
-            sendStartUploadToDBMSRequest(form_data);         
-        } else {
-            if(!$("#file_id").val()) {
-                alert("You have to upload file before starting");
-            }
-        }
-    }
 
-    function workWithFileShowError(error) {
-        $('#workProgessBar').removeClass("progress-bar-success");
-        $('#workProgessBar').addClass("progress-bar-danger");
-        $('#workProgessBar').prop('aria-valuenow', 100);
-        $('#workProgessBar').prop('style', 'width: 100%');
-        $('#workProgessBarStatus').html(error);            
-    }
-
-    function workWithFileShowSuccess() {
-        $('#workProgessBar').removeClass("progress-bar-danger");
-        $('#workProgessBar').addClass("progress-bar-success");
-        $('#workProgessBar').prop('aria-valuenow', 100);
-        $('#workProgessBar').prop('style', 'width: 100%');
-        $('#workProgessBarStatus').html('Uploaded successfully!');  
-        $('#afterUploadToDB').prop('style', 'display: block');          
-    }
-
-    function workWithFileCheckStatus(file_id) {
-        $.ajax({
-            beforeSend: function(xhr) {
-                xhr.setRequestHeader("Authorization", "Token " + getCookie('token'));
-            },
-            url: "/api/upload/"+file_id+"/",
-            type: "GET",
-            success: function(data) {
-                if (data['status'] == -1) {
-                    workWithFileShowError(data['error']);
-                }
-                else if (data['status'] == 2) {
-                    workWithFileShowSuccess();
-                } else {
-                    $('#workProgessBar').prop('aria-valuenow', data['percent']);
-                    $('#workProgessBar').prop('style', 'width: '+data['percent']+'%');
-                    if ('percent' in data) {
-                        $('#workProgessBarStatus').html("Uploading " + data['percent'] + '%');
-                    } else {
-                        $('#workProgessBarStatus').html("Starting upload...");
-                    }
-                    setTimeout(function () {
-                        workWithFileCheckStatus(file_id);
-                    }, timeout)
-                }
-            },
-            dataType: "json",
-        });
-                
-    }
-    
-    // Очистка путей в файле
-    $("#clearAll").click(function (event){
-        event.preventDefault();
-        deleteFile(
-            event, 
-            onError=function(err) {
-                console.log("Unabled to delete file due to techical reasons.");
-                console.log(err);
-                window.location.reload(false);
-            },
-            onSuccess=function(data) {
-                window.location.reload(false);
-            },
-        );
-    });
-    // Очистка путей в файле
-    $("#addNew").click(function (event){
-        event.preventDefault();
-        deleteFile(
-            event,
-            onError=function(e) {
-                alert("Unabled to delete file due to techical reasons.");
-                alert(e);
-            },
-            onDone=resetUploadFile
-        )
-    });
-
-    function resetUploadFile() {
-        $('[id*="file_"]').each(function() {
-            $(this).val('');
-        });
-        $('#workProgessBarStatus').html("");                
-        $('#workProgressBar').removeClass("progress-bar-success");
-        $('#workProgressBar').prop('aria-valuenow', 0);
-        $('#workProgressBar').prop('style', 'width: 75%');
-        $('#uploadProgressBar').removeClass("progress-bar-success");
-        $('#uploadProgressBar').prop('aria-valuenow', 0);
-        $('#progessBarDiv').prop('style', 'display: none');
-        $('#uploadFile').html('<span id="uploadStatus">+ select file</span><input type="file" id="inputUploadFile" accept=".csv, .xls, .xlsx, .dta">');
-        $('#uploadFile').prop('class', 'btn btn-lg btn-primary btn-file');   
-        $('#uploadButtonDiv').prop('class', "col-lg-12");
-        $('#uploadFile').prop('style', "width: 20%");
-        $('#uploadButtonProgress').html('');
-        $('#selectedFile').html('');
-        $('#uploadFile').off('click');
-        $('#uploadFile').on('click', function(e) {
-            addNewFile(e);
-        });
+    function webResetUploadFile() {
+        $("#file-info-form input").val("");
+        $("#file-upload-form input").val("");
+        workProgressBarMonitor.setProgressBarState(state="ready")
+        uploadProgressBarMonitor.setProgressBarState(state="ready")
+        webSwitchUploadRemoveButton("upload");
         $("html, body").animate({ scrollTop: 0 }, "slow"); 
     }
 
+    function webSwitchUploadRemoveButton(state){
+        switch(state) {
+            case "upload":
+                $('#progessBarDiv').attr('hidden', 'hidden');
+                $('#uploadButtonDiv').removeAttr('hidden');
+                $('#removeButtonDiv').attr('hidden', 'hidden');
+                break;
+            case "remove":
+                $('#progessBarDiv').removeAttr('hidden');
+                $('#uploadButtonDiv').attr('hidden', 'true');
+                $('#removeButtonDiv').removeAttr('hidden');
+                break;
+            default:
+                console.log("Incorrect case");
+                break;
+        }
+    }
+
+    function webChangeEditing(element_id, editable) {
+        element = $("#" + element_id);
+        if (editable && element.attr('readonly')) {
+            element.prop("placeholder", "");
+            element.removeAttr('readonly');
+        } else if (!editable && !element.attr('readonly')) {
+            element.prop("readonly", "readonly");
+        }
+    }
+
+    function webLoadConnections(connections) {
+        selected = $("#db_connection").val();
+        $("#db_connection").find('option').remove();
+        $.each(connections, function (key, entry) {
+            $("#db_connection").append(
+                $('<option></option>').attr('value', entry.value).text(entry.name)
+            );
+        });
+        $("#db_connection").val(selected);
+    }
+
+    function webFillDBForm(data) {
+        $("#db-info-form").autofill(data);
+        if ($("#db_type").val() == "PostgreSQL") {
+            webChangeEditing("db_name", true, "");
+            webChangeEditing("db_sid", false, "not applicable");
+        } else if ($("#db_type").val() == "Oracle") {
+            webChangeEditing("db_name", false, "not applicable");
+            webChangeEditing("db_sid", true, "");
+        }
+    }
+
+    // Load connections on start
+    apiLoadConnections(webLoadConnections);
+
+    function alertDeleteError() {
+        alert("Can't delete file! If you want it, please contact administrator.")
+    }
 });

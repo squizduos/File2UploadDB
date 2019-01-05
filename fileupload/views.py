@@ -161,6 +161,7 @@ class DocumentAPIView(BaseUploadAPIView):
 
 class UtilsDecodeDBString(views.APIView):
     permission_classes = (permissions.AllowAny,)
+    authentication_classes = ()
 
     model = Document
 
@@ -170,7 +171,8 @@ class UtilsDecodeDBString(views.APIView):
             200: serializers.DecodeDBConnectionResponseSerializer,
             403: get_exception_definition(403),
             404: get_exception_definition(404),
-        },        
+        },
+        security=[],
         tags=['utils']
     )
     def post(self, request, format=None):

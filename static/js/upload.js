@@ -250,6 +250,7 @@ $(document).ready(function() {
         var forms = ["file-info-form", "table-info-form", "db-info-form"];
         var validateRules = {
             highlight: function(element) {
+                $("html, body").animate({ scrollTop: 0 }, "slow"); 
                 $(element).parent().addClass("has-error");
             },
             unhighlight: function(element) {
@@ -259,7 +260,7 @@ $(document).ready(function() {
                 return false;
             },                      
             debug: true,
-            ignore: "[readonly=readonly]"
+            ignore: "[disabled=true]"
         };
         for (i in forms) {
             $("#"+forms[i]).validate(validateRules);

@@ -3,7 +3,7 @@ services:
     db:
         image: postgres
         volumes:
-             - pgdata:/var/lib/postgresql/data
+            - imgdownloader_pgdata_${BRANCH}:/var/lib/postgresql/data
     web:
         build: .
         command: bash docker-entrypoint.sh
@@ -15,14 +15,14 @@ services:
             - LETSENCRYPT_HOST=${BRANCH}.img-test.squizduos.ru
             - LETSENCRYPT_EMAIL=squizduos@gmail.com
         volumes:
-            - media_data:/code/media
-            - log_data:/code/log
+            - imgdownloader_media_data_${BRANCH}:/code/media
+            - imgdownloader_log_data_${BRANCH}:/code/log
     celery:
         build: .
         command: celery worker -l info -A imgdownloader
         volumes:
-            - media_data:/code/media
-            - log_data:/code/log
+            - imgdownloader_media_data_${BRANCH}:/code/media
+            - imgdownloader_log_data_${BRANCH}:/code/log
     adminer:
         image: adminer
         restart: always
@@ -36,15 +36,15 @@ services:
     redis:
         image: redis:latest
         volumes:
-             - redis_data:/data
+            - imgdownloader_redis_data_${BRANCH}:/data
     celery-flower:
         build: .
         command:  celery flower -A imgdownloader --address=0.0.0.0 --port=5555 
         expose:
             - 5555
         volumes:
-            - media_data:/code/media
-            - log_data:/code/log
+            - imgdownloader_media_data_${BRANCH}:/code/media
+            - imgdownloader_log_data_${BRANCH}:/code/log
         environment:
             - VIRTUAL_HOST=${BRANCH}.img-tasks.squizduos.ru
             - VIRTUAL_PORT=5555
@@ -53,11 +53,10 @@ services:
 
 
 volumes:
-  pgdata:
-  ordata:
-  redis_data:
-  media_data:
-  log_data:
+  imgdownloader_pgdata_${BRANCH}:
+  imgdownloader_redis_data_${BRANCH}:
+  imgdownloader_media_data_${BRANCH}:
+  imgdownloader_log_data_${BRANCH}:
 
 networks:
   default:

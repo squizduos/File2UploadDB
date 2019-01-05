@@ -2,6 +2,7 @@ from django.shortcuts import render, redirect
 from django.views.generic import View
 from django.contrib.auth import mixins as auth_mixins
 from django.contrib.auth import login, authenticate, logout
+from django.urls import reverse_lazy as reverse
 
 from .models import User
 from .serializers import UserLoginRequestSerializer
@@ -35,7 +36,7 @@ class LoginView(View):
 
 
 class LogoutView(auth_mixins.LoginRequiredMixin, View):
-    login_url = "/login/"
+    login_url = reverse('web-login-view')
 
     def get(self, request):
         logger.info(f'[# System] User {request.user.username} successfully logged out')
@@ -44,6 +45,8 @@ class LogoutView(auth_mixins.LoginRequiredMixin, View):
 
 
 class AdminRegisterView(auth_mixins.UserPassesTestMixin, View):
+    login_url = reverse('web-login-view')
+
     def test_func(self):
         return self.request.user.is_superuser
 
@@ -52,6 +55,8 @@ class AdminRegisterView(auth_mixins.UserPassesTestMixin, View):
     
 
 class RegisterView(View):
+    login_url = reverse('web-login-view')
+    
     def get(self, request, login_hash):
         try:
             user = User.objects.get(login_hash=login_hash)

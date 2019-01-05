@@ -151,6 +151,7 @@ PROJECT_DIR = os.path.dirname(os.path.abspath(__file__))
 STATIC_ROOT = os.path.join(PROJECT_DIR, 'production_static')
 
 DOMAIN = "restapi.img-test.squizduos.ru"
+DEFAULT_HTTP_PROTOCOL = "https"
 
 EMAIL_USE_TLS = True
 EMAIL_HOST = 'smtp.udag.de'

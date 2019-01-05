@@ -292,6 +292,13 @@ $(document).ready(function() {
             type: "PUT",
             error: workWithFileShowError,
             success: workWithFileCheckStatus(form_data.file_id),
+            success: function() {
+                $('#workProgessBar').removeClass("progress-bar-danger");
+                $('#workProgessBar').removeClass("progress-bar-success");
+                $('#workProgessBar').prop('aria-valuenow', 0);
+                $('#workProgessBar').prop('style', 'width: 0%');
+                workWithFileCheckStatus(form_data.file_id);   
+            }
         }); 
     }
     

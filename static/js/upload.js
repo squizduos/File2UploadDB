@@ -10,11 +10,11 @@ $(document).ready(function() {
         return null;
     }
 
-    $.ajaxSetup({
-        beforeSend: function(xhr) {
-            xhr.setRequestHeader("Authorization", "Token " + getCookie('token'));
-        }
-    });
+    // $.ajaxSetup({
+    //     beforeSend: function(xhr) {
+            // xhr.setRequestHeader("Authorization", "Token " + getCookie('token'));
+    //     }
+    // });
 
     var selectedFile = $('#selectedFile');
     var timeout = 1000;
@@ -154,9 +154,9 @@ $(document).ready(function() {
 
     function apiDecodeDBConnection(form_data) {
         $.ajax({
-            // beforeSend: function(xhr) {
-            //     xhr.setRequestHeader("Authorization", "Token " + localStorage.token);
-            // },
+            beforeSend: function(xhr) {
+                xhr.setRequestHeader("Authorization", "Token " + getCookie('token'));
+            },
             dataType: 'json',
             contentType: "application/json",
             data: JSON.stringify(form_data),
@@ -177,9 +177,9 @@ $(document).ready(function() {
     
     function loadConnections() {
         $.ajax({
-            // beforeSend: function(xhr) {
-            //     xhr.setRequestHeader("Authorization", "Token " + localStorage.token);
-            // },
+            beforeSend: function(xhr) {
+                xhr.setRequestHeader("Authorization", "Token " + getCookie('token'));
+            },
             dataType: 'json',
             contentType: "application/json",
             url: "/api/utils/load_connections/",
@@ -222,9 +222,9 @@ $(document).ready(function() {
     function deleteFile(event, onError, onSuccess, onDone) {
         var file_id = $('[id=file_id]')[0].value;
         var request = $.ajax({
-            // beforeSend: function(xhr) {
-            //     xhr.setRequestHeader("Authorization", "Token " + localStorage.token);
-            // },
+            beforeSend: function(xhr) {
+                xhr.setRequestHeader("Authorization", "Token " + getCookie('token'));
+            },
             dataType: 'json',
             contentType: "application/json",
             url: "/api/upload/"+file_id+"/",
@@ -281,9 +281,9 @@ $(document).ready(function() {
 
     function sendStartUploadToDBMSRequest(form_data) {
         $.ajax({
-            // beforeSend: function(xhr) {
-            //     xhr.setRequestHeader("Authorization", "Token " + localStorage.token);
-            // },
+            beforeSend: function(xhr) {
+                xhr.setRequestHeader("Authorization", "Token " + getCookie('token'));
+            },
             dataType: 'json',
             contentType: "application/json",
             url: "/api/upload/" + form_data.file_id + '/',
@@ -325,9 +325,9 @@ $(document).ready(function() {
 
     function workWithFileCheckStatus(file_id) {
         $.ajax({
-            // beforeSend: function(xhr) {
-            //     xhr.setRequestHeader("Authorization", "Token " + localStorage.token);
-            // },
+            beforeSend: function(xhr) {
+                xhr.setRequestHeader("Authorization", "Token " + getCookie('token'));
+            },
             url: "/api/upload/"+file_id+"/",
             type: "GET",
             success: function(data) {

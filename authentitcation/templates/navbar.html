@@ -24,8 +24,14 @@
       <!-- Right -->
       <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
         <ul class="nav navbar-nav">
-            <li id="userZone"><a href="{% url 'web-dashboard-view' %}">User space</a></li>
-            <li id="adminZone"><a href="{% url 'web-admin-dashboard-view' %}">Admin space</a></li>
+            {% if user.is_authenticated %}
+              <li id="userZone"><a href="{% url 'web-dashboard-view' %}">User space</a></li>
+              {% if user.is_superuser %}
+                <li id="adminZone"><a href="{% url 'web-admin-dashboard-view' %}">Admin space</a></li>
+              {% endif %}
+            {% else %}
+              <li id="userZone"><a href="{% url 'web-login-view' %}">Login space</a></li>
+            {% endif %}
         </ul>
         {% if user.is_authenticated %}
             <ul class="nav navbar-nav navbar-right">

@@ -19,10 +19,13 @@
         <div class="panel-body">
             <div class="row">
                 <div class="col-lg-12">
-                    <form id="login-form" action="{% url 'api-rest-login' %}" method="post" role="form" style="display: block;">
-                        <div class="alert alert-danger" role="alert" id="login-error" hidden>
-                            
-                        </div>
+                    <form id="login-form" action="{% url 'web-login-view' %}" method="post" role="form" style="display: block;">
+                        {% csrf_token %}
+                        {% if login_errors %}
+                            <div class="alert alert-danger" role="alert">
+                                {{ login_errors }}
+                            </div>
+                        {% endif %}
                         <div class="form-group">
                             <input type="text" name="username" id="username" tabindex="1" class="form-control" placeholder="Username" value="">
                         </div>

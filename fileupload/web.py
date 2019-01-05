@@ -1,8 +1,6 @@
 from django.views.generic import View
 
 from django.shortcuts import render, redirect
-from django.views.decorators.csrf import csrf_exempt
-from django.utils.decorators import method_decorator
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.urls import reverse_lazy as reverse
 

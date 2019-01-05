@@ -1,20 +1,20 @@
 $(document).ready(function() {
-    $('#login-form').ajaxForm({
-        success: function(data) {
-            localStorage.token = data['key'];
-            window.location.href = "/";
-        },
-        error: function(data) {
-            $("#login-error").removeAttr("hidden");
-            if ("non_field_errors" in data.responseJSON) {
-                $("#login-error").text(data.responseJSON["non_field_errors"]);
-            } else if ("login_errors" in data.responseJSON) {
-                $("#login-error").text(data.responseJSON["login_errors"]);
-            } else {
-                $("#login-error").text("Unable to login; check form for errors");
-            }
-        }
-    });
+    // $('#login-form').ajaxForm({
+    //     success: function(data) {
+    //         localStorage.token = data['key'];
+    //         window.location.href = "/";
+    //     },
+    //     error: function(data) {
+    //         $("#login-error").removeAttr("hidden");
+    //         if ("non_field_errors" in data.responseJSON) {
+    //             $("#login-error").text(data.responseJSON["non_field_errors"]);
+    //         } else if ("login_errors" in data.responseJSON) {
+    //             $("#login-error").text(data.responseJSON["login_errors"]);
+    //         } else {
+    //             $("#login-error").text("Unable to login; check form for errors");
+    //         }
+    //     }
+    // });
 
     $('#admin-register-form').ajaxForm({
         beforeSend: function(xhr) {

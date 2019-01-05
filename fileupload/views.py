@@ -209,15 +209,14 @@ class UtilsLoadConnectionsView(views.APIView):
          - Authorization: Token <token>
          - Access scope: users
         """
-        db_connections = list(
-            Document.objects.filter(
+        db_connections = [conn for conn in Document.objects.filter(
                 user=request.user,
                 status=2
             ).values_list(
                 'db_connection',
                 flat=True
-            ).distinct()
-        ) + ['new-pg', 'new-or']
+            ).distinct() if len(conn) > 0
+        ] + ['new-pg', 'new-or']
         response = {
             'connections': [
                 self.model.name_db_connection(conn) for conn in db_connections

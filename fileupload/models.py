@@ -87,7 +87,8 @@ class Document(models.Model):
             return f"{basic_info} || {failed}"
 
     def save(self, *args, **kwargs):
-        self.db_connection = self.__class__.encode_db_connection(**self.__dict__)
+        if self.db_host:
+            self.db_connection = self.__class__.encode_db_connection(**self.__dict__)
         super(self.__class__, self).save(*args, **kwargs)
     
     DB_FIELDS = [      

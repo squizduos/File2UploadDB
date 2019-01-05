@@ -139,6 +139,7 @@ class RegistrationView(views.APIView):
             400: "Validation errors",
             500: "Server errors"
         },
+        security=[], 
         tags=['auth']
     )
     def post(self, request, format=None):

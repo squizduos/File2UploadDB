@@ -36,9 +36,9 @@ schema_view = get_schema_view(
       terms_of_service="https://restapi.img-test.squizduos.ru/",
       contact=openapi.Contact(email="squizduos@gmail.com"),
       license=openapi.License(name="Commerical License"),
-      url="https://restapi.img-test.squizduos.ru/api/",
-      schemes=['https', 'http']
+      url="/api/",
    ),
+   url="https://restapi.img-test.squizduos.ru",
    public=True,
    permission_classes=(permissions.AllowAny, permissions.IsAdminUser, permissions.IsAuthenticated),
 )

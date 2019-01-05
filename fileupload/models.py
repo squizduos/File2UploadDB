@@ -131,8 +131,8 @@ class Document(models.Model):
 
     @classmethod
     def encode_db_connection(cls, **kwargs) -> str:
-        if not all(key in kwargs and len(kwargs[key]) > 0 for key in cls.DB_FIELDS):
-            return "No connection provided"
+        # if not all(key in kwargs and len(kwargs[key]) > 0 for key in cls.DB_FIELDS):
+        #     return "No connection provided"
         kwargs['db_type'] = cls.DB_TYPES[kwargs['db_type']]
         if kwargs['db_type'] == cls.DB_TYPES['Oracle']:
             kwargs['db_name'] = kwargs['db_sid']

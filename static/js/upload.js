@@ -11,11 +11,11 @@ $(document).ready(function() {
             "file_header_line": "",
             "file_separator": "not applicable"
         },
-        "CSV": {
+        "XLSX": {
             "file_header_line": "",
             "file_separator": "not applicable"
         },
-        "CSV": {
+        "DTA": {
             "file_header_line": "not applicable",
             "file_separator": "not applicable"
         },

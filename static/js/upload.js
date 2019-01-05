@@ -55,7 +55,7 @@ $(document).ready(function() {
         xhr.upload.addEventListener('progress', uploadProgress, false);
         xhr.onreadystatechange = stateChange;
         xhr.open('POST', '/api/upload/');
-        xhr.setRequestHeader("Authorization", "Token " + localStorage.token);
+        xhr.setRequestHeader("Authorization", "Token " + getCookie('token'));
         xhr.send(form_data);
     }
     

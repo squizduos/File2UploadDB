@@ -26,6 +26,7 @@ $(document).ready(function() {
         }
     });
 
+
     // Аплоад файла
     function uploadFile(event) {
         var fileName = $("input:file").val();
@@ -33,12 +34,11 @@ $(document).ready(function() {
 
         var form_data = new FormData();
         form_data.append("document", file);
-
         var xhr = new XMLHttpRequest();
         xhr.upload.addEventListener('progress', uploadProgress, false);
         xhr.onreadystatechange = stateChange;
         xhr.open('POST', '/api/upload/');
-        // xhr.setRequestHeader('X-FILE-NAME', file.name);
+        xhr.setRequestHeader("Authorization", "Token " + localStorage.token);
         xhr.send(form_data);
     }
     
@@ -68,7 +68,7 @@ $(document).ready(function() {
     // Пост обрабочик
     function stateChange(event) {
         if (event.target.readyState == 4) {
-            if (event.target.status == 200) {
+            if (event.target.status == 201) {
                 $('#uploadProgressBar').prop('aria-valuenow', 100);
                 $('#uploadProgressBar').prop('style', 'width: 100%');
                 var data = $.parseJSON(event.target.response);
@@ -85,8 +85,12 @@ $(document).ready(function() {
                     selectedFile.text('File is successfully uploaded!');
                     $('#uploadFile').on('click', function(e) {
                         e.preventDefault();
-                        deleteFile(event);
-                        window.location.reload(false);
+                        deleteFile(
+                            event,
+                            onSuccess=function(e) {
+                                window.location.reload(false);
+                            }
+                        );
                     });
                     $('#uploadFile').html('Remove');
                     $('#uploadFile').prop('class', 'btn btn-danger btn-lg');    
@@ -131,47 +135,42 @@ $(document).ready(function() {
             }
         }
     });
+
+    function apiDecodeDBConnection(form_data) {
+        $.ajax({
+            beforeSend: function(xhr) {
+                xhr.setRequestHeader("Authorization", "Token " + localStorage.token);
+            },
+            dataType: 'json',
+            contentType: "application/json",
+            data: JSON.stringify(form_data),
+            url: "/api/utils/decode_db_connection/",
+            type: "POST",
+            success: fillDBData
+        }); 
+    }
     
     // При выборе PostgreSQL лочится SID
     $('#db_connection').on("change", function() {
         var selected = $(this).find(":selected").val();
-        if (selected != "new-pg" && selected != "new-or") {
-            var form_data = {
-                "db_connection": selected,
-            };
-            $.ajax({
-                dataType: 'json',
-                data: form_data,
-                url: "/api/utils/decode_db_connection/",
-                type: "POST",
-                success: fillDBData
-            }); 
-        } else {
-            var data = {
-                "db_username": "",
-                "db_password": "", 
-                "db_host": "", 
-                "db_port": "",
-            };
-            data['db_type'] = (selected == "new-pg" ? "PostgreSQL": "Oracle");
-            data['db_sid'] = (selected == "new-pg" ? "not applicable": "");
-            data['db_name'] = (selected == "new-pg" ? "": "not applicable");
-            fillDBData(data);
-        }
+        var form_data = {
+            "db_connection": selected,
+        };
+        apiDecodeDBConnection(form_data);
     });
     
     function loadConnections() {
         $.ajax({
+            beforeSend: function(xhr) {
+                xhr.setRequestHeader("Authorization", "Token " + localStorage.token);
+            },
             dataType: 'json',
+            contentType: "application/json",
             url: "/api/utils/load_connections/",
             type: "GET",
             success: function(data) {
                 selected = $("#db_connection").val();
                 $("#db_connection").find('option').remove();
-                $("#db_connection").append(
-                    $('<option value="new-pg">New PostgreSQL</option>'),
-                    $('<option value="new-or">New Oracle</option>')
-                );
                 $.each(data['connections'], function (key, entry) {
                     $("#db_connection").append(
                         $('<option></option>').attr('value', entry.value).text(entry.name)
@@ -208,25 +207,27 @@ $(document).ready(function() {
         workWithFile(event);
     });
 
-    function deleteFile(event) {
+    function deleteFile(event, onError, onSuccess, onDone) {
         var file_id = $('[id=file_id]')[0].value;
         var request = $.ajax({
+            beforeSend: function(xhr) {
+                xhr.setRequestHeader("Authorization", "Token " + localStorage.token);
+            },
             dataType: 'json',
-            url: "/api/work/"+file_id+"/",
+            contentType: "application/json",
+            url: "/api/upload/"+file_id+"/",
             type: "DELETE",
-            error: function(e) {
-                alert("Unabled to delete file due to techical reasons.");
-                alert(e);
-                return false;
-            },
-            success: function(data) {
-                return true;
-            },
+            error: onError,
+            success: onSuccess,
+            done: onDone,
             async: false,
+        });
+        request.done(function() {
+            onDone();
         }); 
     }
-    
-    function workWithFile(event) {
+
+    function validateAndCollectData() {
         var validateRules = {
             highlight: function(element) {
                 $(element).parent().addClass("has-error");
@@ -260,20 +261,32 @@ $(document).ready(function() {
                     form_data[el.name] = el.value;
                 }
             );
+            return form_data;                     
+        } else {
+            return undefined;
+        }
+    }
+
+    function sendStartUploadToDBMSRequest(form_data) {
+        $.ajax({
+            beforeSend: function(xhr) {
+                xhr.setRequestHeader("Authorization", "Token " + localStorage.token);
+            },
+            dataType: 'json',
+            contentType: "application/json",
+            url: "/api/upload/" + form_data.file_id + '/',
+            data: JSON.stringify(form_data),
+            type: "PUT",
+            error: workWithFileShowError,
+            success: workWithFileCheckStatus(form_data.file_id),
+        }); 
+    }
+    
+    function workWithFile(event) {
+        form_data = validateAndCollectData();
+        if (form_data != undefined) {
             $('#workProgessBarDiv').prop('style', "display: block");
-            var request = $.ajax({
-                dataType: 'json',
-                url: "/api/work/",
-                data: JSON.stringify(form_data),
-                type: "POST",
-                error: workWithFileShowError,
-            }); 
-            request.done(function(msg) {
-                workWithFileCheckStatus(form_data.file_id);
-            })
-            request.fail(function(jqXHR, textStatus) {
-                workWithFileShowError(textStatus);
-            })         
+            sendStartUploadToDBMSRequest(form_data);         
         } else {
             if(!$("#file_id").val()) {
                 alert("You have to upload file before starting");
@@ -286,7 +299,7 @@ $(document).ready(function() {
         $('#workProgessBar').addClass("progress-bar-danger");
         $('#workProgessBar').prop('aria-valuenow', 100);
         $('#workProgessBar').prop('style', 'width: 100%');
-        $('#workProgessBarStatus').html(error);            
+        $('#workProgessBarStatus').html(thrownError);            
     }
 
     function workWithFileShowSuccess() {
@@ -300,7 +313,10 @@ $(document).ready(function() {
 
     function workWithFileCheckStatus(file_id) {
         $.ajax({
-            url: "/api/work/"+file_id+"/",
+            beforeSend: function(xhr) {
+                xhr.setRequestHeader("Authorization", "Token " + localStorage.token);
+            },
+            url: "/api/upload/"+file_id+"/",
             type: "GET",
             success: function(data) {
                 if (data['status'] == -1) {
@@ -329,71 +345,55 @@ $(document).ready(function() {
     // Очистка путей в файле
     $("#clearAll").click(function (event){
         event.preventDefault();
-        var result = deleteFile();
-        if (result === true) {
-            window.location.reload(false);
-        } else {
-            window.location.reload(false);
-        }
+        deleteFile(
+            event, 
+            onError=function(err) {
+                alert("Unabled to delete file due to techical reasons.");
+                console.log(err);
+            },
+            onSuccess=function(data) {
+                window.location.reload(false);
+            },
+        );
     });
     // Очистка путей в файле
     $("#addNew").click(function (event){
         event.preventDefault();
-        var file_id = $('[id=file_id]')[0].value;
-        var request = $.ajax({
-            dataType: 'json',
-            url: "/api/work/"+file_id+"/",
-            type: "DELETE",
-            error: function(e) {
+        deleteFile(
+            event,
+            onError=function(e) {
                 alert("Unabled to delete file due to techical reasons.");
                 alert(e);
             },
-            success: function(data) {
+            onSuccess=function(data) {
                 console.log("Successfully!");
             },
-            async: false,
-        }); 
-        request.done(function() {
-            $('[id*="file_"]').each(function() {
-                $(this).val('');
-            });
-            $('#workProgessBarStatus').html("");                
-            $('#workProgressBar').removeClass("progress-bar-success");
-            $('#workProgressBar').prop('aria-valuenow', 0);
-            $('#workProgressBar').prop('style', 'width: 75%');
-            $('#uploadProgressBar').removeClass("progress-bar-success");
-            $('#uploadProgressBar').prop('aria-valuenow', 0);
-            $('#progessBarDiv').prop('style', 'display: none');
-            $('#uploadFile').html('<span id="uploadStatus">+ select file</span><input type="file" id="inputUploadFile" accept=".csv, .xls, .xlsx, .dta">');
-            $('#uploadFile').prop('class', 'btn btn-lg btn-primary btn-file');   
-            $('#uploadButtonDiv').prop('class', "col-lg-12");
-            $('#uploadFile').prop('style', "width: 20%");
-            $('#uploadButtonProgress').html('');
-            $('#selectedFile').html('');
-            $('#uploadFile').off('click');
-            $('#uploadFile').on('click', function(e) {
-                addNewFile(e);
-            });
-            $("html, body").animate({ scrollTop: 0 }, "slow");        
-        });        
+            onDone=resetUploadFile
+        )
     });
 
+    function resetUploadFile() {
+        $('[id*="file_"]').each(function() {
+            $(this).val('');
+        });
+        $('#workProgessBarStatus').html("");                
+        $('#workProgressBar').removeClass("progress-bar-success");
+        $('#workProgressBar').prop('aria-valuenow', 0);
+        $('#workProgressBar').prop('style', 'width: 75%');
+        $('#uploadProgressBar').removeClass("progress-bar-success");
+        $('#uploadProgressBar').prop('aria-valuenow', 0);
+        $('#progessBarDiv').prop('style', 'display: none');
+        $('#uploadFile').html('<span id="uploadStatus">+ select file</span><input type="file" id="inputUploadFile" accept=".csv, .xls, .xlsx, .dta">');
+        $('#uploadFile').prop('class', 'btn btn-lg btn-primary btn-file');   
+        $('#uploadButtonDiv').prop('class', "col-lg-12");
+        $('#uploadFile').prop('style', "width: 20%");
+        $('#uploadButtonProgress').html('');
+        $('#selectedFile').html('');
+        $('#uploadFile').off('click');
+        $('#uploadFile').on('click', function(e) {
+            addNewFile(e);
+        });
+        $("html, body").animate({ scrollTop: 0 }, "slow"); 
+    }
 
-    // function cloneFile(event) {
-    //     var file_id = $('[id=file_id]')[0].value;
-    //     var request = $.ajax({
-    //         dataType: 'json',
-    //         url: "/api/work/"+file_id+"/",
-    //         type: "PUT",
-    //         error: function() {
-    //             console.log("Unabled to clone file due to techical reasons.");
-    //             return false;
-    //         },
-    //         success: function(data) {
-    //             return data['file_id'];
-    //         }
-    //     }); 
-    // }
-
-    // $('')
 });

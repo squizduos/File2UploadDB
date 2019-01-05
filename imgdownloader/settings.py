@@ -40,7 +40,9 @@ INSTALLED_APPS = [
     'authentitcation',
     'fileupload',
     'rest_framework',
-    'drf_yasg'
+    'rest_framework.authtoken',
+    'drf_yasg',
+    'rest_auth',
 ]
 
 MIDDLEWARE = [
@@ -78,14 +80,12 @@ REST_FRAMEWORK = {
         'rest_framework.permissions.AllowAny',
     ],
     'DEFAULT_AUTHENTICATION_CLASSES': (
-        'rest_framework_jwt.authentication.JSONWebTokenAuthentication',
+        'rest_framework.authentication.TokenAuthentication',
         'rest_framework.authentication.SessionAuthentication',
         'rest_framework.authentication.BasicAuthentication',
     ),
-
+    'EXCEPTION_HANDLER': 'imgdownloader.exceptions.custom_exception_handler'
 }
-
-
 
 
 WSGI_APPLICATION = 'imgdownloader.wsgi.application'
@@ -103,8 +103,6 @@ DATABASES = {
         'PORT': 5432,
     }
 }
-
-
 
 # Password validation
 # https://docs.djangoproject.com/en/2.1/ref/settings/#auth-password-validators
@@ -165,8 +163,8 @@ LOGGING = {
     'disable_existing_loggers': False,
     'formatters': {
         'verbose': {
-            'format' : "[%(asctime)s] %(message)s",
-            'datefmt' : "%d/%b/%Y %H:%M:%S"
+            'format': "[%(asctime)s] %(message)s",
+            'datefmt': "%d/%b/%Y %H:%M:%S"
         },
         'simple': {
             'format': '{levelname} {message}',
@@ -220,3 +218,13 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media/')
 
 # CELERY_ALWAYS_EAGER = True
 # TEST_RUNNER = 'djcelery.contrib.test_runner.CeleryTestSuiteRunner'
+
+SWAGGER_SETTINGS = {
+   'SECURITY_DEFINITIONS': {
+      'Token': {
+            'type': 'apiKey',
+            'name': 'Authorization',
+            'in': 'header'
+      }
+   }
+}

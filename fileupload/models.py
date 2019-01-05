@@ -1,8 +1,9 @@
+import os
+import re
+
 from django.db import models
 
 from authentitcation.models import User
-
-from .utils import encode_db_connection
 # Create your models here.
 
 DOCUMENT_STATUS = (
@@ -12,11 +13,19 @@ DOCUMENT_STATUS = (
     (-1, 'Error on uploading')
 )
 
+ACCEPTED_EXTENSIONS = ['CSV', 'XLS', 'XLSX', 'DTA']
+
+
 class Document(models.Model):
     original_filename = models.CharField(max_length=128, verbose_name="Original filename")
     document = models.FileField(upload_to='documents/', blank=True)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    file_storage = models.CharField(max_length=255, default="Temporary - deleted after import to database", blank=True, null=True)
+    file_storage = models.CharField(
+        max_length=255,
+        default="Temporary - deleted after import to database",
+        blank=True,
+        null=True
+    )
     file_type = models.CharField(max_length=255, default="CSV")
     file_header_line = models.CharField(max_length=3, blank=True)
     file_separator = models.CharField(max_length=14, blank=True)
@@ -32,9 +41,34 @@ class Document(models.Model):
     task_id = models.CharField(max_length=100, blank=True)
     status = models.IntegerField(choices=DOCUMENT_STATUS, default=0)
     error = models.CharField(max_length=100000, default="", blank=True, null=True)
-    percent = models.IntegerField(null=True)
+    percent = models.IntegerField(null=True, default=0)
     log = models.TextField(default="", blank=True)
 
+    def get_enabled_for_editing_by_default(self):
+        return [
+            "file_type",
+            "file_id",
+            "table_name",
+            "db_type",
+            "db_host",
+            "db_port",
+            "db_username",
+            "db_password",
+            "db_name"
+        ]
+
+    def get_filename_witout_extension(self):
+        if not self.original_filename:
+            return "N/A"
+        filename, extension = os.path.splitext(self.original_filename)
+        return filename
+
+    def get_file_extension(self):
+        if not self.original_filename:
+            return "N/A"
+        filename, extension = os.path.splitext(self.original_filename)
+        return extension[1:].upper()
+        
     def __str__(self):
         basic_info = f"Document #{self.id} by {self.user.username}, filename {self.original_filename}"
         if not self.document.name:
@@ -53,5 +87,70 @@ class Document(models.Model):
             return f"{basic_info} || {failed}"
 
     def save(self, *args, **kwargs):
-        self.db_connection = encode_db_connection(**self.__dict__)
-        super(Document, self).save(*args, **kwargs)
+        self.db_connection = self.__class__.encode_db_connection(**self.__dict__)
+        super(self.__class__, self).save(*args, **kwargs)
+    
+    DB_FIELDS = [      
+        'db_type',
+        'db_username',
+        'db_password',
+        'db_host',
+        'db_port',
+        'db_sid',
+        'db_name'
+    ]
+
+    DB_TYPES = {
+        "PostgreSQL": "postgres",
+        "Oracle": "oracle+cx_oracle"
+    }
+
+    DB_TYPES_INVERSE = {v: k for k, v in DB_TYPES.items()}
+
+    regex = (
+        "(?P<db_type>.*):\/\/(?P<db_username>.*):(?P<db_password>.*)"
+        "@(?P<db_host>.*):(?P<db_port>.*)\/(?P<db_name>.*)"
+    )
+    regex_expression = re.compile(regex)
+
+    @classmethod
+    def encode_db_connection(cls, **kwargs) -> str:
+        if not all(key in kwargs and len(kwargs[key]) > 0 for key in cls.DB_FIELDS):
+            return "No connection provided"
+        kwargs['db_type'] = cls.DB_TYPES[kwargs['db_type']]
+        if kwargs['db_type'] == cls.DB_TYPES['Oracle']:
+            kwargs['db_name'] = kwargs['db_sid']
+        response = (
+            "{db_type}://{db_username}:{db_password}@{db_host}:{db_port}/{db_name}"
+        ).format(**kwargs)
+        return response
+
+    @classmethod
+    def decode_db_connection(cls, db_connection: str) -> dict:
+        result = {key: "" for key in cls.DB_FIELDS}
+        if db_connection == 'new-pg' or db_connection == 'new-or':
+            result["db_type"] = "postgres" if db_connection == "new-pg" else "oracle+cx_oracle"
+        else:
+            for el in cls.regex_expression.finditer(db_connection):
+                result = dict(el.groupdict())
+        # Define db type and restrictions
+        result['db_type'] = cls.DB_TYPES_INVERSE[result['db_type']]
+        result['db_sid'] = result['db_name'] if result['db_type'] == "Oracle" else "not applicable"
+        result['db_name'] = "not applicable" if result['db_type'] == "Oracle" else result['db_name']
+        return result
+
+    @classmethod
+    def name_db_connection(cls, conn: str) -> dict:
+        if conn == 'new-pg' or conn == 'new-or':
+            return {
+                "name": "New PostgreSQL" if conn == 'new-pg' else "New Oracle",
+                "value": conn,
+            }
+        else:
+            fields = cls.decode_db_connection(conn)
+            to_db = fields['db_name'] if fields['db_type'] == 'PostgreSQL' else fields['db_sid']
+            name = "{db_type} ({db_host}), by user {db_username}, to db {to_db}".format(**fields, to_db=to_db)
+            return {
+                "name": name,
+                "value": conn
+            }

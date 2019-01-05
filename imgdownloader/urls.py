@@ -17,69 +17,71 @@ from django.contrib import admin
 from django.urls import include, path, re_path
 from django.conf.urls.static import static
 from django.conf import settings
-from authentitcation.views import AdminRegisterView, RegisterView, LoginView, LogoutView
-from authentitcation import api_views as auth_api_views
-from fileupload.views import DashboardView, AdminDashboardView, UploadToServerView, UploadToDBView, UploadedFileView
-from rest_framework_jwt.views import obtain_jwt_token, refresh_jwt_token, verify_jwt_token
+from django.views.decorators.csrf import csrf_exempt
 
 from rest_framework import permissions
+
+from authentitcation import views as auth_api_views, web as auth_web_views
+
+from fileupload import views as upload_api_views, web as upload_web_views
+
 from drf_yasg.views import get_schema_view
 from drf_yasg import openapi
-
 
 schema_view = get_schema_view(
    openapi.Info(
       title="UploadToDB",
       default_version='v1',
       description="Simple project to upload CSV, XLS(X) and DAT files to powerful server",
-      terms_of_service="https://www.google.com/policies/terms/",
-      contact=openapi.Contact(email="contact@snippets.local"),
-      license=openapi.License(name="BSD License"),
+      terms_of_service="https://master.img-test.squizduos.ru/",
+      contact=openapi.Contact(email="squizduos@gmail.com"),
+      license=openapi.License(name="Commerical License"),
+      url="/api/"
    ),
    public=True,
-   permission_classes=(permissions.AllowAny,),
+   permission_classes=(permissions.AllowAny, permissions.IsAdminUser, permissions.IsAuthenticated),
 )
 
-from fileupload.views import DashboardView, AdminDashboardView, UploadToServerView, UploadToDBView, UploadedFileView, UtilsDecodeDBString, UtilsLoadConnectionsView
-
 urlpatterns = [
-    re_path(r'^swagger(?P<format>\.json|\.yaml)$', schema_view.without_ui(cache_timeout=0), name='schema-json'),
-    path('swagger/', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
-    path('redoc/', schema_view.with_ui('redoc', cache_timeout=0), name='schema-redoc'),
-
 
     path('admin/', admin.site.urls),
 
-    path('', DashboardView.as_view(), name='dashboard'),
-    path('dashboard/', DashboardView.as_view(), name='dashboard2'),
+    path('', upload_web_views.MainPageView.as_view(), name='main-page'),
 
-    path('dashboard/admin/', AdminDashboardView.as_view(), name='admin-dashboard'),
-
-    path('login/', LoginView.as_view(), name="login-view"),
-    path('logout/', LogoutView.as_view(), name="login-view"),
-    path('signup/admin/register',AdminRegisterView.as_view()),
-    path('signup/register/<str:login_hash>', RegisterView.as_view()),
-
-    path('api/',include([
+    path('web/', include([
         path('auth/', include([
-            path('login/', obtain_jwt_token),
-            path('refresh/', refresh_jwt_token),
-            path('verify/', verify_jwt_token),
-            path('register/', UploadToDBView, name='api-register'),
-            path('protected/register', auth_api_views.RegistrationByAdminView, name='api-register'),
+            path('login/', auth_web_views.LoginView.as_view(), name="web-login-view"),
+            path('logout/', auth_web_views.LogoutView.as_view(), name="web-logout-view"),
+            path('register/', auth_web_views.AdminRegisterView.as_view(), name="web-register-view"),
+            path(
+                'set_password/<str:login_hash>/',
+                auth_web_views.RegisterView.as_view(),
+                name="web-set-password-view"
+            ),
         ])),
-        path('upload/', UploadToServerView.as_view(), name='api-upload'),
-        path('work/', UploadToDBView.as_view(), name="api-start-work"),
-        path('work/<file_id>/', UploadedFileView.as_view(), name='api-work-file'),
-        path('utils/', include([
-            path("decode_db_connection/", UtilsDecodeDBString.as_view(), name="api-utils-decodeconn"),
-            path("load_connections/", UtilsLoadConnectionsView.as_view(), name="api-utils-loadconns"),
-        ])),
-        # path('login/', UploadToDBView.as_view(), name='api-login'),
-        # path('logout/', UploadToDBView.as_view(), name='api-login'),
-        # path('admin/register', UploadToDBView.as_view(), name='api-login'),
-        # path('register/', UploadToDBView.as_view(), name='api-login'),
+        path('dashboard/', upload_web_views.DashboardView.as_view(), name='web-dashboard-view'),
+        path('dashboard/admin/', upload_web_views.AdminDashboardView.as_view(), name='web-admin-dashboard-view'),
     ])),
+
+    path('api/', include([
+        path('auth/', include([
+            path('login/', csrf_exempt(auth_api_views.LoginAPIView.as_view()), name='api-rest-login'),
+            path('logout/', csrf_exempt(auth_api_views.LogoutAPIView.as_view()), name='api-rest-logout'),
+            path('register/', auth_api_views.RegistrationByAdminView.as_view(), name='api-register'),
+            path('set_password/', auth_api_views.RegistrationView.as_view(), name='api-set-password'),
+        ])),
+        path('upload/', include([
+            path('', upload_api_views.DocumentUploadAPIView.as_view(), name='api-upload'),
+            path('<document_id>/', upload_api_views.DocumentAPIView.as_view(), name='api-upload-with-id'),
+        ])),
+        path('utils/', include([
+            path("decode_db_connection/", upload_api_views.UtilsDecodeDBString.as_view(), name="api-utils-decodeconn"),
+            path("load_connections/", upload_api_views.UtilsLoadConnectionsView.as_view(), name="api-utils-loadconns"),
+        ])),
+    ])),
+
+    re_path(r'^swagger(?P<format>\.json|\.yaml)$', schema_view.without_ui(cache_timeout=0), name='schema-json'),
+    path('swagger/', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
 ]
 
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

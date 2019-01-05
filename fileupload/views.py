@@ -1,193 +1,227 @@
-import os
 import json
 
-from django.views.generic import View
+from django.http import JsonResponse, Http404
+from django.core.exceptions import PermissionDenied
 
-from django.shortcuts import render
-from django.views.decorators.csrf import csrf_exempt
-from django.utils.decorators import method_decorator
-from django.http import JsonResponse
-from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
-from django.core.serializers import serialize
+from rest_framework import views
+from rest_framework.response import Response
+from rest_framework import authentication, permissions, parsers
 
-from .forms import DocumentUpdateForm, DocumentUploadForm
+from . import serializers
 from .models import Document
-from .utils import file_read_from_tail, decode_db_connection, encode_db_connection
 from .tasks import DocumentTask
 
-from celery.result import AsyncResult
+from imgdownloader.exceptions import get_exception_definition
+
+from drf_yasg.utils import swagger_auto_schema
+
 
 import logging
 logger = logging.getLogger('admin_log')
 
 
-@method_decorator(csrf_exempt, name='dispatch')
-class DashboardView(LoginRequiredMixin, View):
-    login_url = "/login/"
+class BaseUploadAPIView(views.APIView):
+    authentication_classes = (authentication.TokenAuthentication,)
+    permission_classes = (permissions.IsAuthenticated,)
+    model = Document
 
-    def get(self, request):
-        return render(request, 'dashboard.html', context={})
-
-
-@method_decorator(csrf_exempt, name='dispatch')
-class AdminDashboardView(UserPassesTestMixin, View):
-    def test_func(self):
-        return self.request.user.is_superuser
-
-    login_url = "/login/"
-
-    def get(self, request):
-        log = file_read_from_tail('log/info.log', 10000)
-        return render(request, 'admin-dashboard.html', context={'log': log})
-
-
-@method_decorator(csrf_exempt, name='dispatch')
-class UploadToServerView(LoginRequiredMixin, View):
-    login_url = "/login/"
-
-    def prepare_uploaded_file(self, model):
-        response = {}
-        response['enabled_for_editing'] = ['file_type']
-
-        response['file_id'] = model.id, 
-        response['file_storage'] = model.file_storage
-        response['file_path'] = model.document.path
-        response['file_name'] = os.path.basename(model.document.name)
-        filename, extension = os.path.splitext(model.original_filename)
-        if extension.upper() in ['.CSV', '.XLS', '.XLSX', '.DTA']:
-            response['file_type'] = extension.upper()[1:]
+    def has_permission(self, request, obj):
+        if request.user and request.user.is_authenticated:
+            return True if request.user.is_superuser or obj.user == request.user else False
         else:
-            response['file_type'] = 'CSV'
-        if response['file_type'] == 'CSV':
-            response['file_header_line'] = ""
-            response['file_separator'] = ""
-            response['enabled_for_editing'].append('file_header_line')
-            response['enabled_for_editing'].append('file_separator')
-        elif response['file_type'] == 'XLS':
-            response['file_header_line'] = ""
-            response['enabled_for_editing'].append('file_header_line')
-            response['file_separator'] = 'not applicable'
-        elif response['file_type'] == 'XLSX':
-            response['file_header_line'] = ""
-            response['enabled_for_editing'].append('file_header_line')
-            response['file_separator'] = 'not applicable'
-        elif response['file_type'] == 'DTA':
-            response['file_header_line'] = 'not applicable'
-            response['file_separator'] = 'not applicable'
-        response['table_name'] = filename
-        # response['db_connection'] = []
-        # db_connections = list(Document.objects.filter(user=model.user, status=2).values_list('db_connection', flat=True).distinct())
-        # for conn in db_connections:
-        #     fields = decode_db_connection(conn)
-        #     response['db_connection'].append({"name": f"{fields['db_type']} ({fields['db_host']}), by user {fields['db_username']}, to db {fields['db_name'] if fields['db_type'] == 'PostgreSQL' else fields['db_sid']}", "value": conn})
-        response['enabled_for_editing'] += ["table_name", "db_type", "db_host", "db_port", "db_username", "db_password", "db_name", "file_id"]
-        return response
+            return False
+    
+    def launch_task(self, obj: Document):
+        new_task = DocumentTask()
+        task_run = new_task.delay(obj.id)
+        obj.task_id = task_run.task_id
+        obj.save()
 
-    def post(self, request):
-        form = DocumentUploadForm(request.POST, request.FILES)
-        if form.is_valid():
-            model = form.save(commit=False)
-            model.user = request.user
-            model.original_filename = request.FILES['document'].name
-            model.save()
+    def get_object(self, request, pk):
+        try:
+            obj = self.model.objects.get(pk=pk) 
+        except self.model.DoesNotExist:
+            raise Http404
+        else:
+            if not self.has_permission(request, obj):
+                raise PermissionDenied
+            return obj
+
+
+class DocumentUploadAPIView(BaseUploadAPIView): 
+    parser_classes = (parsers.MultiPartParser, )
+
+    @swagger_auto_schema(
+        request_body=serializers.DocumentUploadRequestSerializer,
+        responses={
+            201: serializers.DocumentUploadResponseSerializer,
+            400: "Validation errors",
+        },        
+        tags=['upload_db']
+    )
+    def post(self, request, format=None):
+        """
+        Uploads new document to server and returns detected info about it.
+
+         - Authorization: Token <token>
+         - Access scope: users
+        """
+        request_serializer = serializers.DocumentUploadRequestSerializer(
+            data=request.data,
+            original_filename=request.data['document'].name,
+            user=request.user
+        )
+        if request_serializer.is_valid():
+            document = request_serializer.save()
+            response_serializer = serializers.DocumentUploadResponseSerializer(document)
             logger.info(
-                f'File {model.id} is successfully uploaded by user {model.user.username} and preparing to load on DBMS'
+                f'[# Document {document.id}] File is successfully uploaded to server '
+                f'by user {document.user.username} and preparing to load on DBMS'
             )
-            return JsonResponse(self.prepare_uploaded_file(model))
+            return Response(response_serializer.data, status=201)
         else:
-            logger.info(f'File uploading by user {request.user.username} error')
-            return JsonResponse({"error": form.errors}, status=400)
+            logger.info(
+                f'[# Document {document.id}] File uploading by user {request.user.username} failed; '
+                f'data validation failed, errors are: {json.dumps(request_serializer.errors)}'
+            )
+            return Response(request_serializer.errors, status=400)
 
-@method_decorator(csrf_exempt, name='dispatch')
-class UploadToDBView(LoginRequiredMixin, View):
-    login_url = "/login/"
+
+class DocumentAPIView(BaseUploadAPIView):
+    @swagger_auto_schema(
+        request_body=None,
+        responses={
+            200: serializers.DocumentStatusSerializer,
+            403: get_exception_definition(403),
+            404: get_exception_definition(404),
+        },        
+        tags=['upload_db']
+    )
+    def get(self, request, document_id, format=None):
+        """
+        Uploads new document to server and returns detected info about it.
+
+         - Authorization: Token <token>
+         - Access scope: users
+        """
+        document = self.get_object(request, document_id)
+        response_serializer = serializers.DocumentStatusSerializer(document)
+        return JsonResponse(response_serializer.data, status=200)
     
-    def post(self, request):
-        try:
-            data = json.loads(request.body)
-        except Exception as e:
-            logger.info(f'File preparing by user {request.user.username} error; incorrect JSON data')
-            return JsonResponse({"error": "Incorrect JSON data, error: " + str(e)}, status=400)
-        try:
-            document = Document.objects.get(id=data['file_id'])
-        except Exception as e:
-            logger.info(f'File preparing #{data["file_id"]} by user {request.user.username} error; file not found')
-            return JsonResponse({"error": "File not found"}, status=404)
+    @swagger_auto_schema(
+        request_body=serializers.DocumentUpdateSerializer,
+        responses={
+            201: serializers.DocumentStatusSerializer,
+            400: "Validation errors",
+            403: get_exception_definition(403),
+            404: get_exception_definition(404),
+        },        
+        tags=['upload_db']
+    )
+    def put(self, request, document_id, format=None):
+        """
+        Launches uploading file to DBMS with selected_parameters.
 
-        form = DocumentUpdateForm(data, instance=document)
-        if form.is_valid():
-            model = form.save(commit=False)
-            model.user = request.user
-            model.save()
-            # Running task
-            new_task = DocumentTask()
-            task_run = new_task.delay(model.id)
-            model.task_id = task_run.task_id
-            model.save()
-            logger.info(f'File {model.id} uploading to DBMS is started by {request.user.username}')
-            return JsonResponse({"status": "uploading"})
+         - Authorization: Token <token>
+         - Access scope: users
+        """
+        document = self.get_object(request, document_id)
+        request_serializer = serializers.DocumentUpdateSerializer(document, data=request.data)
+        if request_serializer.is_valid():
+            document = request_serializer.save()
+            self.launch_task(document)
+            logger.info(f'[# Document {document_id}] File uploading to DBMS is started by {request.user.username}')
+            response_serializer = serializers.DocumentStatusSerializer(document)
+            return Response(response_serializer.data, status=200)
         else:
-            logger.info(f'File uploading by user {request.user.username} error')
-            return JsonResponse({"error": form.errors}, status=400)
+            return Response(request_serializer.errors, status=400)
+
+    @swagger_auto_schema(
+        request_body=None,
+        responses={
+            200: "{'deleted': 'true'}",
+            400: "Validation errors",
+            403: get_exception_definition(403),
+            404: get_exception_definition(404),
+        },        
+        tags=['upload_db']
+    )
+    def delete(self, request, document_id, format=None):
+        """
+        Deletes file from server.
+
+         - Authorization: Token <token>
+         - Access scope: users
+        """
+        document = self.get_object(request, document_id)
+        document.document.delete()
+        logger.info(f'[# Document {document_id}]File #{document_id} deleted by user {request.user.username}')
+        return JsonResponse({"deleted": True}, status=200)
 
 
-@method_decorator(csrf_exempt, name='dispatch')
-class UploadedFileView(LoginRequiredMixin, View):
-    login_url = "/login/"
-    
-    def get(self, request, file_id):
-        try:
-            document = Document.objects.get(id=file_id)
-        except Exception as e:
-            logger.info(f'File checking status #{data["file_id"]} by user {request.user.username} error; file not found')
-            return JsonResponse({"status": -1, "error": "File not found"}, status=404)
-        response = {"status": document.status, "error": document.error, "percent": document.percent}
-        return JsonResponse(response)
+class UtilsDecodeDBString(views.APIView):
+    permission_classes = (permissions.AllowAny,)
 
-    def delete(self, request, file_id):
-        try:
-            document = Document.objects.get(id=file_id)
-        except Exception as e:
-            logger.info(f'File checking status #{file_id} by user {request.user.username} error; file not found')
-            return JsonResponse({"error": "File not found, error: " + str(e)}, status=404)
-        try:
-            document.document.delete()
-            logger.info(f'File upload #{file_id} cancelled by user {request.user.username}')
-            return JsonResponse({"error": "File deleted successfully"}, status=200)
-        except Exception as e:
-            logger.info(f'File upload #{file_id} cancelling by user {request.user.username} error {str(e)}')
-            return JsonResponse({"error": str(e)}, status=400)
+    model = Document
 
+    @swagger_auto_schema(
+        request_body=serializers.DecodeDBConnectionRequestSerializer,
+        responses={
+            200: serializers.DecodeDBConnectionResponseSerializer,
+            403: get_exception_definition(403),
+            404: get_exception_definition(404),
+        },        
+        tags=['utils']
+    )
+    def post(self, request, format=None):
+        """
+        Decodes connection string.
 
-@method_decorator(csrf_exempt, name='dispatch')
-class UtilsDecodeDBString(LoginRequiredMixin, View):
-    login_url = "/login/"
-    def post(self, request):
-        if "db_connection" in request.POST:
-            return JsonResponse(decode_db_connection(request.POST["db_connection"]))
+         - Authorization: none
+         - Access scope: anyone
+        """
+        request_serializer = serializers.DecodeDBConnectionRequestSerializer(data=request.data)
+        if request_serializer.is_valid():
+            response = self.model.decode_db_connection(request_serializer.data['db_connection'])
+            response_serializer = serializers.DecodeDBConnectionResponseSerializer(response)
+            return JsonResponse(response_serializer.data, status=200)
         else:
-            return JsonResponse({"error": "No db_connection provided"}, status=400)
+            return Response(request_serializer.errors, status=400)
 
 
-@method_decorator(csrf_exempt, name='dispatch')
-class UtilsLoadConnectionsView(LoginRequiredMixin, View):
-    login_url = "/login/"
+class UtilsLoadConnectionsView(views.APIView):
+    permission_classes = (permissions.IsAuthenticated,)
+    authentication_classes = (authentication.TokenAuthentication,)
 
-    def get(self, request):
+    model = Document
+
+    @swagger_auto_schema(
+        request_body=None,
+        responses={
+            200: serializers.ListDBConnectionsResponseSerializer,
+        },        
+        tags=['utils']
+    )
+    def get(self, request, format=None):
+        """
+        Returns list of connections, that are available to user.
+
+         - Authorization: Token <token>
+         - Access scope: users
+        """
+        db_connections = list(
+            Document.objects.filter(
+                user=request.user,
+                status=2
+            ).values_list(
+                'db_connection',
+                flat=True
+            ).distinct()
+        ) + ['new-pg', 'new-or']
         response = {
-            'connections': []
+            'connections': [
+                self.model.name_db_connection(conn) for conn in db_connections
+            ]
         }
-        db_connections = list(Document.objects.filter(
-            user=request.user,
-            status=2
-        ).values_list('db_connection', flat=True).distinct())
-        for conn in db_connections:
-            fields = decode_db_connection(conn)
-            response['connections'].append({
-                "name": (
-                    f"{fields['db_type']} ({fields['db_host']}), "
-                    f"by user {fields['db_username']}, "
-                    f"to db {fields['db_name'] if fields['db_type'] == 'PostgreSQL' else fields['db_sid']}"
-                ), "value": conn
-            })
-        return JsonResponse(response)
+        response_serializer = serializers.ListDBConnectionsResponseSerializer(response)
+        return JsonResponse(response_serializer.data, status=200)

@@ -17,7 +17,7 @@ idna==2.8
 inflection==0.3.1
 itypes==1.1.0
 Jinja2==2.10
-kombu==4.2.2
+kombu==4.2.2.post1
 MarkupSafe==1.1.0
 mccabe==0.6.1
 numpy==1.15.4
@@ -39,4 +39,4 @@ uritemplate==3.0.0
 urllib3==1.24.1
 vine==1.1.4
 xlrd==1.2.0
-django_celery_monitor
+django-rest-auth==0.9.3

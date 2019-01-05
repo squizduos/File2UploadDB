@@ -1,20 +1,20 @@
 # main/tasks.py
-import os, traceback
-
+import traceback
 import logging
-logger = logging.getLogger('admin_log')
-
-from django.conf import settings
 
 import pandas
 
-from sqlalchemy import create_engine, types
-
 import celery.states
 
+from sqlalchemy import create_engine, types
+
 from imgdownloader.celery import app
+
 from .models import Document
 from .utils import chunker
+
+logger = logging.getLogger('admin_log')
+
 
 class DocumentTask(celery.Task):
     ignore_result = True
@@ -31,7 +31,10 @@ class DocumentTask(celery.Task):
         self.update_with_pending(status_string, 0)
         self.conn, err = self.connect_to_db(self.document)
         if err:
-            err_string = f'Step 1: connect to DBMS {self.document.db_type} at host {self.document.db_host} is failed; error {err}'
+            err_string = (
+                f'Step 1: connect to DBMS {self.document.db_type} at host {self.document.db_host} is failed;'
+                f'error {err}'
+            )
             return self.update_with_error(err_string)
         else:
             status_string = f"Step 1: Remote DBMS connection was estabilished (server {self.document.db_host})."
@@ -41,7 +44,10 @@ class DocumentTask(celery.Task):
         self.update_with_pending(status_string, 0)
         data = self.parse_file(self.document)
         if not isinstance(data, pandas.core.frame.DataFrame):
-            err_string = f'File {self.document.id}, was not succesfully uploaded; error while parsing; not compartble type {type(data)}'
+            err_string = (
+                f'File {self.document.id}, was not succesfully uploaded; '
+                f'error while parsing, not compartble type {type(data)}'
+            )
             return self.update_with_error(err_string)
         else:
             status_string = f"Step 2: Parsing file {self.document.file_type} is succeed."
@@ -49,18 +55,21 @@ class DocumentTask(celery.Task):
         # Step 3: write all to table
         status_string = "Step 3: Uploading file to DBMS..."
         self.update_with_pending(status_string, 0)
-        chunksize = int(len(data) / 100) if len(data) > 200 else len(data) # 1%
+        chunksize = int(len(data) / 100) if len(data) > 200 else len(data)  # 1%
         for i, cdf in enumerate(chunker(data, chunksize)):
             status, err = self.write_row_to_db(self.document, cdf)
             if not status:
-                err_string = f"File {self.document.id}, was not succesfully uploaded; error while inserting to DBMS, err {err}."
+                err_string = (
+                    f'File {self.document.id}, was not succesfully uploaded; '
+                    f'error while inserting to DBMS, err {err}.'
+                ) 
                 return self.update_with_error(err_string)
             status_string = "Step 3: Uploading file to DBMS..."
             self.update_with_pending(status_string, i)
         return self.update_with_success()  
 
     def on_failure(self, exc, task_id, args, kwargs, einfo):
-        logger.info(f"File {self.file_id} uploading faled; celery error")
+        logger.info(f"[# Document {self.file_id}] Uploading to DBMS faled; celery error")
         document = Document.objects.get(id=self.file_id)
         self.log += f'Celery error.\n'
         document.error = "Celery error"
@@ -69,6 +78,7 @@ class DocumentTask(celery.Task):
         document.save()
 
     def update_with_error(self, err_string):
+        # [# Document {}]
         logger.info(f"[# Document {self.file_id}] {err_string}")
         self.log += f'{err_string}\n'
         self.document.status = -1

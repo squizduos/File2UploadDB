@@ -129,8 +129,7 @@ class RegistrationByAdminView(views.APIView):
 
 
 class RegistrationView(views.APIView):
-    authentication_classes = (authentication.TokenAuthentication,)
-    permission_classes = (permissions.IsAdminUser,)
+    permission_classes = (permissions.AllowAny,)
 
     @swagger_auto_schema(
         request_body=serializers.UserSetPasswordRequestSerializer,

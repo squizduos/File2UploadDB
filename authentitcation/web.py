@@ -7,11 +7,17 @@ from django.urls import reverse_lazy as reverse
 from .models import User
 from .serializers import UserLoginRequestSerializer
 
+from rest_auth.models import TokenModel
+
 import logging
 logger = logging.getLogger('admin_log')
 
 
 class LoginView(View):
+    def create_token(self, user, *args, **kwargs):
+        token, _ = TokenModel.objects.get_or_create(user=user)
+        return token
+
     def get(self, request):
         if request.user.is_authenticated:
             return redirect('web-dashboard-view')
@@ -26,7 +32,9 @@ class LoginView(View):
             if user:
                 login(request, user)
                 logger.info(f'[# System] User {username} successfully logged in')
-                return redirect('main-page')
+                response = redirect('main-page')
+                response.set_cookie('token', self.create_token(user))
+                return response
             else:
                 logger.info(f'[# System] User {username} trying to log in, incorrect username or password')
                 return render(request, 'login.html', context={"login_errors": "Username or password is incorrect"})
@@ -56,7 +64,7 @@ class AdminRegisterView(auth_mixins.UserPassesTestMixin, View):
 
 class RegisterView(View):
     login_url = reverse('web-login-view')
-    
+
     def get(self, request, login_hash):
         try:
             user = User.objects.get(login_hash=login_hash)

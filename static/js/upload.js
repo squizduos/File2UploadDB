@@ -1,4 +1,21 @@
 $(document).ready(function() {
+    function getCookie(name) {
+        var nameEQ = name + "=";
+        var ca = document.cookie.split(';');
+        for(var i=0;i < ca.length;i++) {
+            var c = ca[i];
+            while (c.charAt(0)==' ') c = c.substring(1,c.length);
+            if (c.indexOf(nameEQ) == 0) return c.substring(nameEQ.length,c.length);
+        }
+        return null;
+    }
+
+    $.ajaxSetup({
+        beforeSend: function(xhr) {
+            xhr.setRequestHeader("Authorization", "Token " + getCookie('token'));
+        }
+    });
+
     var selectedFile = $('#selectedFile');
     var timeout = 1000;
 
@@ -137,9 +154,9 @@ $(document).ready(function() {
 
     function apiDecodeDBConnection(form_data) {
         $.ajax({
-            beforeSend: function(xhr) {
-                xhr.setRequestHeader("Authorization", "Token " + localStorage.token);
-            },
+            // beforeSend: function(xhr) {
+            //     xhr.setRequestHeader("Authorization", "Token " + localStorage.token);
+            // },
             dataType: 'json',
             contentType: "application/json",
             data: JSON.stringify(form_data),
@@ -160,9 +177,9 @@ $(document).ready(function() {
     
     function loadConnections() {
         $.ajax({
-            beforeSend: function(xhr) {
-                xhr.setRequestHeader("Authorization", "Token " + localStorage.token);
-            },
+            // beforeSend: function(xhr) {
+            //     xhr.setRequestHeader("Authorization", "Token " + localStorage.token);
+            // },
             dataType: 'json',
             contentType: "application/json",
             url: "/api/utils/load_connections/",
@@ -205,9 +222,9 @@ $(document).ready(function() {
     function deleteFile(event, onError, onSuccess, onDone) {
         var file_id = $('[id=file_id]')[0].value;
         var request = $.ajax({
-            beforeSend: function(xhr) {
-                xhr.setRequestHeader("Authorization", "Token " + localStorage.token);
-            },
+            // beforeSend: function(xhr) {
+            //     xhr.setRequestHeader("Authorization", "Token " + localStorage.token);
+            // },
             dataType: 'json',
             contentType: "application/json",
             url: "/api/upload/"+file_id+"/",
@@ -264,9 +281,9 @@ $(document).ready(function() {
 
     function sendStartUploadToDBMSRequest(form_data) {
         $.ajax({
-            beforeSend: function(xhr) {
-                xhr.setRequestHeader("Authorization", "Token " + localStorage.token);
-            },
+            // beforeSend: function(xhr) {
+            //     xhr.setRequestHeader("Authorization", "Token " + localStorage.token);
+            // },
             dataType: 'json',
             contentType: "application/json",
             url: "/api/upload/" + form_data.file_id + '/',
@@ -308,9 +325,9 @@ $(document).ready(function() {
 
     function workWithFileCheckStatus(file_id) {
         $.ajax({
-            beforeSend: function(xhr) {
-                xhr.setRequestHeader("Authorization", "Token " + localStorage.token);
-            },
+            // beforeSend: function(xhr) {
+            //     xhr.setRequestHeader("Authorization", "Token " + localStorage.token);
+            // },
             url: "/api/upload/"+file_id+"/",
             type: "GET",
             success: function(data) {

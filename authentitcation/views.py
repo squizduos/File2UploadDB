@@ -24,7 +24,7 @@ class LoginAPIView(rest_auth_views.LoginView):
             500: "Server errors"
         },
         tags=['auth']
-    )
+    )    
     def post(self, request, *args, **kwargs):
         """
         Login user.

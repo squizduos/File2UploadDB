@@ -40,7 +40,7 @@ schema_view = get_schema_view(
    ),
    url="https://restapi.img-test.squizduos.ru",
    public=True,
-   permission_classes=(permissions.AllowAny, permissions.IsAdminUser, permissions.IsAuthenticated),
+   permission_classes=(permissions.AllowAny, ),
 )
 
 urlpatterns = [

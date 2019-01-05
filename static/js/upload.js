@@ -82,7 +82,7 @@ $(document).ready(function() {
 
     $('#file_type').on('change', function() {
         var extension = $(this).find(":selected").val();
-        if ($("#file_id").text().length > 0) {  
+        if ($("#file_id").val().length > 0) {  
             for (var key in extensions_config[extension]) {
                 if (extensions_config[extension][key] == 'not applicable') {
                     $('#'+key).val(extensions_config[extension][key]);

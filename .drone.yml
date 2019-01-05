@@ -98,6 +98,5 @@ pipeline:
             Немедленно сообщите @squizduos.
             {{/success}}
         when:
-            branch: master
             status:  [ failure, success ]
 

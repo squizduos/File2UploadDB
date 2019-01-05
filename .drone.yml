@@ -1,9 +1,4 @@
 pipeline:
-    print-environment:
-        image: alpine/git
-        commands:
-         - printenv
-
     telegram-notify-start-build:
         image: appleboy/drone-telegram
         secrets:
@@ -33,7 +28,7 @@ pipeline:
         volumes:
           - /var/run/docker.sock:/var/run/docker.sock
         when:
-            branch: master
+            status:  [ success ]
     
     telegram-notify-start-deploy:
         image: appleboy/drone-telegram

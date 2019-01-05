@@ -77,7 +77,6 @@ $(document).ready(function() {
                     $("#file-info-form").autofill(data);
                     $("#db-info-form").autofill(data);
                     $.each(data, function(key, value){
-                        console.log("key: " + key + " " + data['enabled_for_editing'].indexOf(key));
                         editable = (data['enabled_for_editing'].indexOf(key) > -1);
                         changeEditing(key, editable, undefined)
                       });
@@ -184,16 +183,12 @@ $(document).ready(function() {
     loadConnections();
 
     function fillDBData(data) {
-        console.log("Autofill data: ");
-        console.log(data);
+
         $("#db-info-form").autofill(data);
-        console.log($("#db_type").val());
         if ($("#db_type").val() == "PostgreSQL") {
-            console.log("Selected PostgreSQL!");
             changeEditing("db_name", true, "");
             changeEditing("db_sid", false, "not applicable");
         } else if ($("#db_type").val() == "Oracle") {
-            console.log("Selected Oracle!");
             changeEditing("db_name", false, "not applicable");
             changeEditing("db_sid", true, "");
         }
@@ -348,8 +343,9 @@ $(document).ready(function() {
         deleteFile(
             event, 
             onError=function(err) {
-                alert("Unabled to delete file due to techical reasons.");
+                console.log("Unabled to delete file due to techical reasons.");
                 console.log(err);
+                window.location.reload(false);
             },
             onSuccess=function(data) {
                 window.location.reload(false);
@@ -364,9 +360,6 @@ $(document).ready(function() {
             onError=function(e) {
                 alert("Unabled to delete file due to techical reasons.");
                 alert(e);
-            },
-            onSuccess=function(data) {
-                console.log("Successfully!");
             },
             onDone=resetUploadFile
         )

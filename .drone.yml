@@ -1,9 +1,4 @@
 pipeline:
-    print-environment:
-        image: alpine/git
-        commands:
-         - printenv
-
     telegram-notify-start-build:
         image: appleboy/drone-telegram
         secrets:
@@ -32,8 +27,6 @@ pipeline:
          - docker-compose -p ${DRONE_REPO_NAME}-${DRONE_COMMIT_BRANCH} build
         volumes:
           - /var/run/docker.sock:/var/run/docker.sock
-        when:
-            branch: master
     
     telegram-notify-start-deploy:
         image: appleboy/drone-telegram
@@ -61,7 +54,7 @@ pipeline:
             Сервис продолжает работу в стабильном режиме по адресу [https://{{commit.branch}}.{{repo.name}}.squizduos.ru](https://{{commit.branch}}.{{repo.name}}.squizduos.ru).
             {{/success}}
         when:
-            status:  [ success ]
+            status:  [ failure, success ]
 
     deploy-local:
         image: docker/compose:1.23.2
@@ -103,6 +96,5 @@ pipeline:
             Немедленно сообщите @squizduos.
             {{/success}}
         when:
-            branch: master
             status:  [ failure, success ]
 

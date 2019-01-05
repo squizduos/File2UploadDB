@@ -4,13 +4,6 @@ services:
         image: postgres
         volumes:
              - pgdata:/var/lib/postgresql/data
-    oracle:
-        image: wnameless/oracle-xe-11g       
-        ports:
-            - 1521:1521
-        environment:
-            - ORACLE_ALLOW_REMOTE=true
-            - ORACLE_ENABLE_XDB=true
     web:
         build: .
         command: bash docker-entrypoint.sh

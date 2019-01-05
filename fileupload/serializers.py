@@ -108,8 +108,8 @@ class DocumentUpdateSerializer(serializers.ModelSerializer):
     db_password = serializers.CharField(required=True)
     db_host = serializers.CharField(required=True)
     db_port = serializers.CharField(required=True)
-    db_sid = serializers.CharField()
-    db_name = serializers.CharField()
+    db_sid = serializers.CharField(required=False)
+    db_name = serializers.CharField(required=False)
 
     class Meta:
         model = Document

@@ -3,7 +3,7 @@ services:
     db:
         image: postgres
         volumes:
-            - imgdownloader_pgdata_restapi:/var/lib/postgresql/data
+             - pgdata:/var/lib/postgresql/data
     oracle:
         image: wnameless/oracle-xe-11g       
         ports:
@@ -11,60 +11,60 @@ services:
         environment:
             - ORACLE_ALLOW_REMOTE=true
             - ORACLE_ENABLE_XDB=true
-
     web:
         build: .
         command: bash docker-entrypoint.sh
         expose:
             - 8000
         environment:
-            - VIRTUAL_HOST=restapi.img-test.squizduos.ru
+            - VIRTUAL_HOST=master.img-test.squizduos.ru
             - VIRTUAL_PORT=8000
-            - LETSENCRYPT_HOST=restapi.img-test.squizduos.ru
+            - LETSENCRYPT_HOST=master.img-test.squizduos.ru
             - LETSENCRYPT_EMAIL=squizduos@gmail.com
         volumes:
-            - imgdownloader_media_data_restapi:/code/media
-            - imgdownloader_log_data_restapi:/code/log
+            - media_data:/code/media
+            - log_data:/code/log
     celery:
         build: .
         command: celery worker -l info -A imgdownloader
         volumes:
-            - imgdownloader_media_data_restapi:/code/media
-            - imgdownloader_log_data_restapi:/code/log
+            - media_data:/code/media
+            - log_data:/code/log
     adminer:
         image: adminer
         restart: always
         expose:
             - 8080
         environment:
-            - VIRTUAL_HOST=restapi.img-db.squizduos.ru
+            - VIRTUAL_HOST=master.img-db.squizduos.ru
             - VIRTUAL_PORT=8080
-            - LETSENCRYPT_HOST=restapi.img-db.squizduos.ru
+            - LETSENCRYPT_HOST=master.img-db.squizduos.ru
             - LETSENCRYPT_EMAIL=squizduos@gmail.com
     redis:
         image: redis:latest
         volumes:
-            - imgdownloader_redis_data_restapi:/data
+             - redis_data:/data
     celery-flower:
         build: .
         command:  celery flower -A imgdownloader --address=0.0.0.0 --port=5555 
         expose:
             - 5555
         volumes:
-            - imgdownloader_media_data_restapi:/code/media
-            - imgdownloader_log_data_restapi:/code/log
+            - media_data:/code/media
+            - log_data:/code/log
         environment:
-            - VIRTUAL_HOST=restapi.img-tasks.squizduos.ru
+            - VIRTUAL_HOST=master.img-tasks.squizduos.ru
             - VIRTUAL_PORT=5555
-            - LETSENCRYPT_HOST=restapi.img-tasks.squizduos.ru
+            - LETSENCRYPT_HOST=master.img-tasks.squizduos.ru
             - LETSENCRYPT_EMAIL=squizduos@gmail.com
 
 
 volumes:
-  imgdownloader_pgdata_restapi:
-  imgdownloader_redis_data_restapi:
-  imgdownloader_media_data_restapi:
-  imgdownloader_log_data_restapi:
+  pgdata:
+  ordata:
+  redis_data:
+  media_data:
+  log_data:
 
 networks:
   default:

@@ -105,7 +105,23 @@ class Document(models.Model):
         "Oracle": "oracle+cx_oracle"
     }
 
-    DB_TYPES_INVERSE = {v: k for k, v in DB_TYPES.items()}
+    DB_TYPES_INVERSE = {
+        "postgres": "PostgreSQL",
+        "oracle+cx_oracle": "Oracle"
+    }
+
+    DB_TYPES_DEFAULT_DATA = {
+        "PostgreSQL": {
+            "db_sid": "not applicable"
+        },
+        "Oracle": {
+            "db_name": "not applicable"
+        },
+        "undefined": {
+            "db_sid": "not applicable",
+            "db_name": "not applicable"
+        }
+    }
 
     regex = (
         "(?P<db_type>.*):\/\/(?P<db_username>.*):(?P<db_password>.*)"
@@ -131,12 +147,13 @@ class Document(models.Model):
         if db_connection == 'new-pg' or db_connection == 'new-or':
             result["db_type"] = "postgres" if db_connection == "new-pg" else "oracle+cx_oracle"
         else:
-            for el in cls.regex_expression.finditer(db_connection):
-                result = dict(el.groupdict())
-        # Define db type and restrictions
-        result['db_type'] = cls.DB_TYPES_INVERSE[result['db_type']]
-        result['db_sid'] = result['db_name'] if result['db_type'] == "Oracle" else "not applicable"
-        result['db_name'] = "not applicable" if result['db_type'] == "Oracle" else result['db_name']
+            found = [m.groupdict() for m in cls.regex_expression.finditer(db_connection)]
+            result.update(**found[0])
+        if result['db_type'] in cls.DB_TYPES_INVERSE.keys():
+            result['db_type'] = cls.DB_TYPES_INVERSE[result['db_type']]
+        else:
+            result['db_type'] == 'undefined'
+        result.update(**cls.DB_TYPES_DEFAULT_DATA[result['db_type']])
         return result
 
     @classmethod

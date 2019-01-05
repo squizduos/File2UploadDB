@@ -231,11 +231,12 @@ $(document).ready(function() {
             type: "DELETE",
             error: onError,
             success: onSuccess,
-            done: onDone,
             async: false,
         });
         request.done(function() {
-            onDone();
+            if (typeof onDone === "function") {
+                onDone();
+            }
         }); 
     }
 
@@ -311,7 +312,7 @@ $(document).ready(function() {
         $('#workProgessBar').addClass("progress-bar-danger");
         $('#workProgessBar').prop('aria-valuenow', 100);
         $('#workProgessBar').prop('style', 'width: 100%');
-        $('#workProgessBarStatus').html(thrownError);            
+        $('#workProgessBarStatus').html(error);            
     }
 
     function workWithFileShowSuccess() {

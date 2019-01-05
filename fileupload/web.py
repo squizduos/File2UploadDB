@@ -17,7 +17,6 @@ class MainPageView(View):
         return redirect('web-dashboard-view')
 
 
-@method_decorator(csrf_exempt, name='dispatch')
 class DashboardView(LoginRequiredMixin, View):
     login_url = reverse('web-login-view')
 

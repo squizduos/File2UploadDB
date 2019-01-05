@@ -33,10 +33,10 @@ schema_view = get_schema_view(
       title="UploadToDB",
       default_version='v1',
       description="Simple project to upload CSV, XLS(X) and DAT files to powerful server",
-      terms_of_service="https://master.img-test.squizduos.ru/",
+      terms_of_service="https://restapi.img-test.squizduos.ru/",
       contact=openapi.Contact(email="squizduos@gmail.com"),
       license=openapi.License(name="Commerical License"),
-      url="/api/"
+      url="https://restapi.img-test.squizduos.ru/api/"
    ),
    public=True,
    permission_classes=(permissions.AllowAny, permissions.IsAdminUser, permissions.IsAuthenticated),

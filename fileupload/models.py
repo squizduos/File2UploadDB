@@ -152,7 +152,7 @@ class Document(models.Model):
             result['db_type'] = cls.DB_TYPES_INVERSE[result['db_type']]
         else:
             result['db_type'] == 'undefined'
-        if result['db_type'] == "oracle+cx_oracle":
+        if result['db_type'] == "Oracle":
             result['db_sid'] = result['db_name']
             result['db_name'] = ''
         result.update(**cls.DB_TYPES_DEFAULT_DATA[result['db_type']])

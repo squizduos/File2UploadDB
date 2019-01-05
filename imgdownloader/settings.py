@@ -39,7 +39,6 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'authentitcation',
     'fileupload',
-    'django_celery_monitor',
 ]
 
 MIDDLEWARE = [

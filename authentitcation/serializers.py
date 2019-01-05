@@ -27,6 +27,8 @@ class UserSetPasswordRequestSerializer(serializers.Serializer):
         """
         Check that the start is before the stop.
         """
+        if 'login_hash' not in data:
+            raise serializers.ValidationError("Can't find user without login_hash")
         if not self.model.objects.filter(login_hash=data['login_hash']):
             raise serializers.ValidationError("User with login hash does not exist")
         if data['password'] != data['confirm_password']:
@@ -34,13 +36,8 @@ class UserSetPasswordRequestSerializer(serializers.Serializer):
         return data
     
     login_hash = serializers.CharField(max_length=255, required=True)
-    password = serializers.CharField(
-        max_length=128,
-        min_length=8,
-        write_only=True, 
-        required=True
-    )
-    confirm_password = serializers.CharField(required=True)
+    password = serializers.CharField(max_length=128, min_length=8, required=True)
+    confirm_password = serializers.CharField(max_length=128, min_length=8, required=True)
 
 
 class UserRegisterResponseSerializer(serializers.Serializer):

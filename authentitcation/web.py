@@ -66,6 +66,8 @@ class RegisterView(View):
     login_url = reverse('web-login-view')
 
     def get(self, request, login_hash):
+        if request.user.is_authenticated:
+            return redirect('web-dashboard-view')
         try:
             user = User.objects.get(login_hash=login_hash)
         except Exception as e:

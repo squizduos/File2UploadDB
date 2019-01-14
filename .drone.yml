@@ -25,11 +25,12 @@ steps:
       `{{commit.message}}`
 
 - name: build
-  image: docker/compose:1.23.2
+  image: docker:dind
   commands:
   - docker-compose -p ${DRONE_REPO_NAME}-${DRONE_COMMIT_BRANCH} build
   volumes:
-  - /var/run/docker.sock:/var/run/docker.sock
+  - name: dockersock
+    path: /var/run/docker.sock
   when:
     status:
     - success
@@ -70,7 +71,8 @@ steps:
   - export BRANCH=${DRONE_COMMIT_BRANCH}
   - docker-compose -p ${DRONE_REPO_NAME}-${DRONE_COMMIT_BRANCH} up -d
   volumes:
-  - /var/run/docker.sock:/var/run/docker.sock
+  - name: dockersock
+    path: /var/run/docker.sock
   when:
     status:
     - success
@@ -107,3 +109,8 @@ steps:
     status:
     - success
     - failure
+
+volumes:
+- name: dockersock
+  host:
+    path: /var/run/docker.sock

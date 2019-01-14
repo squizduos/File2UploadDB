@@ -5,6 +5,7 @@ from copy import deepcopy
 from django.db import models
 
 from authentitcation.models import User
+
 # Create your models here.
 
 DOCUMENT_STATUS = (
@@ -23,6 +24,7 @@ UPLOADING_STRATEGIES = (
     (2, 'Append'),
     (3, 'Replace')
 )
+
 
 class Document(models.Model):
     original_filename = models.CharField(max_length=128, verbose_name="Original filename")
@@ -77,7 +79,7 @@ class Document(models.Model):
             return "N/A"
         filename, extension = os.path.splitext(self.original_filename)
         return extension[1:].upper()
-        
+
     def __str__(self):
         basic_info = f"Document #{self.id} by {self.user.username}, filename {self.original_filename}"
         if not self.document.name:
@@ -102,8 +104,8 @@ class Document(models.Model):
         if self.db_host:
             self.db_connection = self.__class__.encode_db_connection(**self.__dict__)
         super(self.__class__, self).save(*args, **kwargs)
-    
-    DB_FIELDS = [      
+
+    DB_FIELDS = [
         'db_type',
         'db_username',
         'db_password',
@@ -163,7 +165,7 @@ class Document(models.Model):
         if result['db_type'] in cls.DB_TYPES_INVERSE.keys():
             result['db_type'] = cls.DB_TYPES_INVERSE[result['db_type']]
         else:
-            result['db_type'] == 'undefined'
+            result['db_type'] = 'undefined'
         if result['db_type'] == "Oracle":
             result['db_sid'] = result['db_name']
             result['db_name'] = ''

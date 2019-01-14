@@ -1,15 +1,15 @@
-from django.shortcuts import render, redirect
-from django.views.generic import View
-from django.contrib.auth import mixins as auth_mixins
+import logging
+
 from django.contrib.auth import login, authenticate, logout
+from django.contrib.auth import mixins as auth_mixins
+from django.shortcuts import render, redirect
 from django.urls import reverse_lazy as reverse
+from django.views.generic import View
+from rest_auth.models import TokenModel
 
 from .models import User
 from .serializers import UserLoginRequestSerializer
 
-from rest_auth.models import TokenModel
-
-import logging
 logger = logging.getLogger('admin_log')
 
 
@@ -26,7 +26,7 @@ class LoginView(View):
     def post(self, request):
         serializer = UserLoginRequestSerializer(data=request.POST)
         if serializer.is_valid():
-            username = serializer.data.get('username')    
+            username = serializer.data.get('username')
             password = serializer.data.get('password')
             user = authenticate(username=username, password=password)
             if user:
@@ -60,7 +60,7 @@ class AdminRegisterView(auth_mixins.UserPassesTestMixin, View):
 
     def get(self, request):
         return render(request, 'admin_register.html')
-    
+
 
 class RegisterView(View):
     login_url = reverse('web-login-view')

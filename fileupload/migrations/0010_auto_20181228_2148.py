@@ -4,7 +4,6 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ('fileupload', '0009_document_task_id'),
     ]
@@ -19,6 +18,7 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='document',
             name='file_storage',
-            field=models.CharField(blank=True, default='Temporary - deleted after import to database', max_length=255, null=True),
+            field=models.CharField(blank=True, default='Temporary - deleted after import to database', max_length=255,
+                                   null=True),
         ),
     ]

@@ -1,16 +1,12 @@
 # main/tasks.py
-import traceback
 import logging
-
-import pandas
+import traceback
 
 import celery.states
-
+import pandas
 from sqlalchemy import create_engine, types
-from sqlalchemy.engine import reflection
 
 from imgdownloader.celery import app
-
 from .models import Document
 from .utils import chunker
 
@@ -74,11 +70,11 @@ class DocumentTask(celery.Task):
                 err_string = (
                     f'Step 4: File {self.document.id}, was not succesfully uploaded; '
                     f'error while inserting to DBMS, err {err}.'
-                ) 
+                )
                 return self.update_with_error(err_string)
             status_string = "Step 4: Uploading file to DBMS..."
             self.update_with_pending(status_string, i)
-        return self.update_with_success()  
+        return self.update_with_success()
 
     def on_failure(self, exc, task_id, args, kwargs, einfo):
         logger.info(f"[# Document {self.file_id}] Uploading to DBMS faled; celery error")
@@ -128,19 +124,19 @@ class DocumentTask(celery.Task):
     def connect_to_db(self, document):
         connection_strings = {
             "PostgreSQL": "postgresql://{uname}:{pw}@{ip}:{port}/{db}".format(
-                                uname=document.db_username,
-                                pw=document.db_password,
-                                ip=document.db_host,
-                                port=document.db_port,
-                                db=document.db_name
-                            ),
+                uname=document.db_username,
+                pw=document.db_password,
+                ip=document.db_host,
+                port=document.db_port,
+                db=document.db_name
+            ),
             "Oracle": 'oracle+cx_oracle://{uname}:{pw}@{ip}:{port}/{SID}'.format(
-                            uname=document.db_username,
-                            pw=document.db_password,
-                            ip=document.db_host,
-                            port=document.db_port,
-                            SID=document.db_sid
-                        )
+                uname=document.db_username,
+                pw=document.db_password,
+                ip=document.db_host,
+                port=document.db_port,
+                SID=document.db_sid
+            )
         }
 
         if document.db_type in connection_strings.keys():
@@ -151,7 +147,6 @@ class DocumentTask(celery.Task):
                 return None, str(e)
         else:
             return None, "Incorrect DB type"
-
 
     def parse_file(self, document):
         if document.file_type == 'CSV':
@@ -173,7 +168,7 @@ class DocumentTask(celery.Task):
                 data_frame = data_frame.drop(indexes_for_drop, axis=1)
                 return data_frame
             except Exception as e:
-                return str(e)    
+                return str(e)
         elif document.file_type == 'DTA':
             try:
                 data_frame = pandas.read_stata(document.document.path)
@@ -196,7 +191,7 @@ class DocumentTask(celery.Task):
                 to_vc = {c: types.VARCHAR(300) for c in data.columns[data.dtypes == 'object'].tolist()}
                 ntyp.update(to_vc)
                 data.to_sql(document.table_name, self.conn, if_exists=if_exists, dtype=ntyp, index=False)
-            except Exception as e:                
+            except Exception as e:
                 logger.info(f"[# Document {self.file_id}] error {traceback.format_exc()}, data: {data}")
                 return False, str(e)
             else:
@@ -212,7 +207,8 @@ class DocumentTask(celery.Task):
             else:
                 response = None
                 with engine.connect() as connection:
-                    rs = connection.execute(f"SELECT COUNT(*) FROM user_tables WHERE table_name = '{document.table_name.upper()}'")
+                    rs = connection.execute(
+                        f"SELECT COUNT(*) FROM user_tables WHERE table_name = '{document.table_name.upper()}'")
                     response = rs.fetchone()[0]
                 result = response > 0
             logger.info(f"[# Document {self.file_id}] checking table existing {result}")
@@ -220,5 +216,6 @@ class DocumentTask(celery.Task):
             return None, str(e)
         else:
             return result, None
+
 
 app.tasks.register(DocumentTask())

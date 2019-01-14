@@ -1,4 +1,4 @@
-$(document).ready(function() {
+$(document).ready(function () {
     // Defining constants
     var timeout = 1000;
 
@@ -41,14 +41,14 @@ $(document).ready(function() {
             "startAjax": {
                 "url": '/api/upload/%s/',
                 "method": "PUT",
-                "beforeSend": function(xhr) {
+                "beforeSend": function (xhr) {
                     xhr.setRequestHeader("Authorization", "Token " + getCookie('token'));
                 }
             },
             "monitorAjax": {
                 "url": '/api/upload/%s/',
                 "method": "GET",
-                "beforeSend": function(xhr) {
+                "beforeSend": function (xhr) {
                     xhr.setRequestHeader("Authorization", "Token " + getCookie('token'));
                 }
             },
@@ -63,46 +63,47 @@ $(document).ready(function() {
                 "onPause": "User action is required"
             },
             "actions": {
-                "onFinish": function(){
-                    $('#afterUploadToDB').prop('style', 'display: block'); 
+                "onFinish": function () {
+                    $('#afterUploadToDB').prop('style', 'display: block');
                 },
                 "onPause": function (file_id) {
-                   $("#file_id").val(file_id);
-                   $('#selectStrategyModal').modal('toggle');
-                   var table_name = $("#table_name").val();
-                   $("#strategy_table_name").val(table_name);
+                    $("#file_id").val(file_id);
+                    $('#selectStrategyModal').modal('toggle');
+                    var table_name = $("#table_name").val();
+                    $("#strategy_table_name").val(table_name);
                 }
             }
         },
         timeout
-    );;
+    );
+    ;
 
     // UI elements behaviour
 
-    $("input:file").change(function (){
+    $("input:file").change(function () {
         uploadFile(event);
     });
 
-    $('#agreeToRegulations').change(function() {
+    $('#agreeToRegulations').change(function () {
         $('#uploadFile, #uploadStart').prop('disabled', !this.checked);
     });
 
-    $('#file_type').on('change', function() {
+    $('#file_type').on('change', function () {
         var extension = $(this).find(":selected").val();
-        if ($("#file_id").val().length > 0) {  
+        if ($("#file_id").val().length > 0) {
             for (var key in extensions_config[extension]) {
                 if (extensions_config[extension][key] == 'not applicable') {
-                    $('#'+key).val(extensions_config[extension][key]);
-                    $('#'+key).attr('readonly', 'readonly');
+                    $('#' + key).val(extensions_config[extension][key]);
+                    $('#' + key).attr('readonly', 'readonly');
                 } else {
-                    $('#'+key).val('');
-                    $('#'+key).removeAttr('readonly');
+                    $('#' + key).val('');
+                    $('#' + key).removeAttr('readonly');
                 }
             }
         }
     });
 
-    $('#db_connection').on("change", function() {
+    $('#db_connection').on("change", function () {
         var selected = $(this).find(":selected").val();
         var form_data = {
             "db_connection": selected,
@@ -110,12 +111,12 @@ $(document).ready(function() {
         apiDecodeDBConnection(form_data, webFillDBForm);
     });
 
-    $("#uploadStart").click(function (event){
+    $("#uploadStart").click(function (event) {
         event.preventDefault();
         apiUploadFiletoDBMS(event);
     });
 
-    $("#clearAll").click(function (event){
+    $("#clearAll").click(function (event) {
         event.preventDefault();
         apiDeleteFile(
             alertDeleteError,
@@ -123,15 +124,15 @@ $(document).ready(function() {
         );
     });
 
-    $("#addNew").click(function (event){
+    $("#addNew").click(function (event) {
         event.preventDefault();
         apiDeleteFile(
             alertDeleteError,
-            webResetUploadFile 
+            webResetUploadFile
         )
     });
 
-    $('#removeFile').on('click', function(e) {
+    $('#removeFile').on('click', function (e) {
         e.preventDefault();
         apiDeleteFile(
             alertDeleteError,
@@ -139,17 +140,17 @@ $(document).ready(function() {
         );
     });
 
-    $('#cancelUpload').on('click', function(e) {
+    $('#cancelUpload').on('click', function (e) {
         e.preventDefault();
         apiCancelUploadFileToDBMS(e);
     });
 
-    $('#continueUpload').on('click', function(e) {
+    $('#continueUpload').on('click', function (e) {
         e.preventDefault();
         apiContinueUploadFileToDBMS(e);
     });
 
-    $('#db_strategy').on("change", function() {
+    $('#db_strategy').on("change", function () {
         selected_strategy = $("#db_strategy").val();
         if (selected_strategy != "1") {
             webChangeEditing("strategy_table_name", false, "not applicable");
@@ -173,7 +174,7 @@ $(document).ready(function() {
         xhr.send(form_data);
         webSwitchUploadRemoveButton("remove");
     }
-    
+
     function uploadFileProgress(event) {
         var percent = parseInt(event.loaded / event.total * 100);
         uploadProgressBarMonitor.setProgressBarState("launch", "", percent);
@@ -187,17 +188,17 @@ $(document).ready(function() {
                     $("#table-info-form").autofill(data);
                     $("#file-info-form").autofill(data);
                     $("#db-info-form").autofill(data);
-                    $.each(data, function(key, value){
+                    $.each(data, function (key, value) {
                         editable = (data['enabled_for_editing'].indexOf(key) > -1);
                         webChangeEditing(key, editable, undefined)
                     });
                     uploadProgressBarMonitor.setProgressBarState("finish", "File is successfully uploaded!");
                     webSwitchUploadRemoveButton("remove");
                 } else {
-                    uploadProgressBarMonitor.setProgressBarState("error", "Error on uploading; try again later or check format!");    
+                    uploadProgressBarMonitor.setProgressBarState("error", "Error on uploading; try again later or check format!");
                 }
             } else {
-                uploadProgressBarMonitor.setProgressBarState("error", "Error on uploading; try again later!");    
+                uploadProgressBarMonitor.setProgressBarState("error", "Error on uploading; try again later!");
             }
         }
     }
@@ -214,24 +215,24 @@ $(document).ready(function() {
             type: "POST",
             success: onSuccess,
             error: onError
-        }); 
+        });
     }
-    
+
     // API: Delete file
     function apiDeleteFile(onError, onSuccess) {
         var file_id = $('[id=file_id]')[0].value;
         $.ajax({
-            beforeSend: function(xhr) {
+            beforeSend: function (xhr) {
                 xhr.setRequestHeader("Authorization", "Token " + getCookie('token'));
             },
             dataType: 'json',
             contentType: "application/json",
-            url: "/api/upload/"+file_id+"/",
+            url: "/api/upload/" + file_id + "/",
             type: "DELETE",
-            error: function(e) {
+            error: function (e) {
                 onError();
             },
-            success: function(data) {
+            success: function (data) {
                 if (data['deleted'] == true) {
                     onSuccess();
                 } else {
@@ -249,7 +250,7 @@ $(document).ready(function() {
             $('#workProgessBarDiv').prop('style', "display: block");
             workProgressBarMonitor.start(form_data.file_id, form_data);
         } else {
-            if(!form_data.file_id) {
+            if (!form_data.file_id) {
                 alert("You have to upload file before starting");
             }
         }
@@ -265,13 +266,13 @@ $(document).ready(function() {
     // API: Upload file to DBMS
     function apiContinueUploadFileToDBMS(event) {
         var validateRules = {
-            highlight: function(element) {
+            highlight: function (element) {
                 $(element).parent().addClass("has-error");
             },
-            unhighlight: function(element) {
+            unhighlight: function (element) {
                 $(element).parent().removeClass("has-error");
             },
-            errorPlacement: function(error, element) {
+            errorPlacement: function (error, element) {
                 return false;
             },
             debug: true,
@@ -300,74 +301,76 @@ $(document).ready(function() {
         $('#selectStrategyModal').modal('toggle');
         workProgressBarMonitor.start(file_id, form_data);
     }
-    
+
     // API: Load connections list
     function apiLoadConnections(onSuccess, onError) {
         $.ajax({
-            beforeSend: function(xhr) {
+            beforeSend: function (xhr) {
                 xhr.setRequestHeader("Authorization", "Token " + getCookie('token'));
             },
             dataType: 'json',
             contentType: "application/json",
             url: "/api/utils/load_connections/",
             type: "GET",
-            success: function(data) {
+            success: function (data) {
                 onSuccess(data['connections'])
             },
             error: onError
-        }); 
+        });
     }
 
 
     function formValidateAndCollectData() {
         var forms = ["file-info-form", "table-info-form", "db-info-form"];
         var validateRules = {
-            highlight: function(element) {
+            highlight: function (element) {
                 $(element).parent().addClass("has-error");
             },
-            unhighlight: function(element) {
+            unhighlight: function (element) {
                 $(element).parent().removeClass("has-error");
             },
-            errorPlacement: function(error, element) {
+            errorPlacement: function (error, element) {
                 return false;
-            },                      
+            },
             debug: true,
             ignore: "[disabled=true]"
         };
         for (i in forms) {
-            $("#"+forms[i]).validate(validateRules);
+            $("#" + forms[i]).validate(validateRules);
         }
         var valid = true;
         for (i in forms) {
-            form_valid = $("#"+forms[i]).valid();
+            form_valid = $("#" + forms[i]).valid();
             valid = (form_valid == false ? false : valid);
         }
         if (valid) {
             var form_data = {};
             for (i in forms) {
-                $("#"+forms[i]).serializeArray().map(
-                    (el) => {form_data[el.name] = el.value}
+                $("#" + forms[i]).serializeArray().map(
+                    (el) => {
+                        form_data[el.name] = el.value
+                    }
                 );
             }
-            return form_data;                     
+            return form_data;
         } else {
-            $("html, body").animate({ scrollTop: 0 }, "slow"); 
+            $("html, body").animate({scrollTop: 0}, "slow");
             return undefined;
         }
     }
-    
+
 
     function webResetUploadFile() {
         $("#file-info-form input").val("");
         $("#file-upload-form input").val("");
-        workProgressBarMonitor.setProgressBarState(state="ready")
-        uploadProgressBarMonitor.setProgressBarState(state="ready")
+        workProgressBarMonitor.setProgressBarState(state = "ready")
+        uploadProgressBarMonitor.setProgressBarState(state = "ready")
         webSwitchUploadRemoveButton("upload");
-        $("html, body").animate({ scrollTop: 0 }, "slow"); 
+        $("html, body").animate({scrollTop: 0}, "slow");
     }
 
-    function webSwitchUploadRemoveButton(state){
-        switch(state) {
+    function webSwitchUploadRemoveButton(state) {
+        switch (state) {
             case "upload":
                 $('#progessBarDiv').attr('hidden', 'hidden');
                 $('#uploadButtonDiv').removeAttr('hidden');

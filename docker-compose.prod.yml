@@ -1,0 +1,30 @@
+version: '2'
+services:
+    web:
+        build: .
+        command: bash docker-entrypoint.sh
+        ports:
+            - 8000:8000
+        environment:
+            - VIRTUAL_HOST=restapi.img-test.squizduos.ru
+            - VIRTUAL_PORT=8000
+            - LETSENCRYPT_HOST=restapi.img-test.squizduos.ru
+            - LETSENCRYPT_EMAIL=squizduos@gmail.com
+        volumes:
+            - imgdownloader_media_data_restapi:/code/media
+            - imgdownloader_log_data_restapi:/code/log
+    celery:
+        build: .
+        command: celery worker -l info -A imgdownloader
+        volumes:
+            - imgdownloader_media_data_restapi:/code/media
+            - imgdownloader_log_data_restapi:/code/log
+
+volumes:
+  imgdownloader_media_data_restapi:
+  imgdownloader_log_data_restapi:
+
+networks:
+  default:
+    external:
+      name: nginx-proxy

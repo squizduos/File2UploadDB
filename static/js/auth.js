@@ -1,11 +1,11 @@
-$(document).ready(function() {
+$(document).ready(function () {
     function getCookie(name) {
         var nameEQ = name + "=";
         var ca = document.cookie.split(';');
-        for(var i=0;i < ca.length;i++) {
+        for (var i = 0; i < ca.length; i++) {
             var c = ca[i];
-            while (c.charAt(0)==' ') c = c.substring(1,c.length);
-            if (c.indexOf(nameEQ) == 0) return c.substring(nameEQ.length,c.length);
+            while (c.charAt(0) == ' ') c = c.substring(1, c.length);
+            if (c.indexOf(nameEQ) == 0) return c.substring(nameEQ.length, c.length);
         }
         return null;
     }
@@ -27,13 +27,13 @@ $(document).ready(function() {
     };
 
     $.ajaxSetup({
-        beforeSend: function(xhr) {
+        beforeSend: function (xhr) {
             xhr.setRequestHeader("Authorization", "Token " + getCookie('token'));
         }
     });
-    
 
-    $('#admin-register-form').submit(function(event) {
+
+    $('#admin-register-form').submit(function (event) {
         event.preventDefault();
         $.ajax({
             url: $(this).attr('action'),
@@ -41,7 +41,7 @@ $(document).ready(function() {
             dataType: 'json',
             contentType: "application/json",
             data: JSON.stringify($(this).serializeFormJSON()),
-            success: function(data) {
+            success: function (data) {
                 if (data['registered'] == true) {
                     $("#admin-register-success").removeAttr("hidden");
                     $("#admin-register-success").text("User is successfully added!");
@@ -50,40 +50,18 @@ $(document).ready(function() {
                     $("#admin-register-error").text("Can not send mail!");
                 }
             },
-            error: function(data) {
+            error: function (data) {
                 $("#admin-register-error").removeAttr("hidden");
                 if ("non_field_errors" in data.responseJSON) {
                     $("#admin-register-error").text(data.responseJSON["non_field_errors"]);
                 } else {
                     $("#admin-register-error").text("Unable to register user; check form for errors");
-                }    
+                }
             }
         });
     });
 
-    // $('#admin-register-form').ajaxForm({
-    //     dataType: 'json',
-    //     contentType: "application/json",
-    //     success: function(data) {
-            // if (data['registered'] == true) {
-            //     $("#admin-register-success").removeAttr("hidden");
-            //     $("#admin-register-success").text("User is successfully added!");
-            // } else {
-            //     $("#admin-register-error").removeAttr("hidden");
-            //     $("#admin-register-error").text("Can not send mail!");
-            // }
-    //     },
-    //     error: function(data) {
-            // $("#admin-register-error").removeAttr("hidden");
-            // if ("non_field_errors" in data.responseJSON) {
-            //     $("#admin-register-error").text(data.responseJSON["non_field_errors"]);
-            // } else {
-            //     $("#admin-register-error").text("Unable to register user; check form for errors");
-            // }
-    //     }
-    // });
-
-    $('#register-form').submit(function(event) {
+    $('#register-form').submit(function (event) {
         event.preventDefault();
         $.ajax({
             url: $(this).attr('action'),
@@ -91,7 +69,7 @@ $(document).ready(function() {
             dataType: 'json',
             contentType: "application/json",
             data: JSON.stringify($(this).serializeFormJSON()),
-            success: function(data) {
+            success: function (data) {
                 if (data['registered'] == true) {
                     window.location.href = "/";
                 } else {
@@ -99,7 +77,7 @@ $(document).ready(function() {
                     $("#register-errors").text("Unable to register user; try again later.");
                 }
             },
-            error: function(data) {
+            error: function (data) {
                 $("#register-errors").removeAttr("hidden");
                 if ("non_field_errors" in data.responseJSON) {
                     $("#register-errors").text(data.responseJSON["non_field_errors"]);
@@ -110,25 +88,4 @@ $(document).ready(function() {
         });
     });
 
-    // $('#register-form').ajaxForm({
-    //     dataType: 'json',
-    //     contentType: "application/json",
-    //     data: $(this).serializeFormJSON(),
-    //     success: function(data) {
-    //         if (data['registered'] == true) {
-    //             window.location.href = "/";
-    //         } else {
-    //             $("#register-errors").removeAttr("hidden");
-    //             $("#register-errors").text("Unable to register user; try again later.");
-    //         }
-    //     },
-    //     error: function(data) {
-    //         $("#register-errors").removeAttr("hidden");
-    //         if ("non_field_errors" in data.responseJSON) {
-    //             $("#register-errors").text(data.responseJSON["non_field_errors"]);
-    //         } else {
-    //             $("#register-errors").text(data.responseJSON);
-    //         }
-    //     }
-    // });
 });

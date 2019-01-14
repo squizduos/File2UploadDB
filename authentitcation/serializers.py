@@ -34,7 +34,7 @@ class UserSetPasswordRequestSerializer(serializers.Serializer):
         if data['password'] != data['confirm_password']:
             raise serializers.ValidationError("Passwords are not match")
         return data
-    
+
     login_hash = serializers.CharField(max_length=255, required=True)
     password = serializers.CharField(max_length=128, min_length=8, required=True)
     confirm_password = serializers.CharField(max_length=128, min_length=8, required=True)

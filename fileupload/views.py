@@ -1,23 +1,18 @@
 import json
-from copy import deepcopy
+import logging
 
-from django.http import JsonResponse, Http404
 from django.core.exceptions import PermissionDenied
-
+from django.http import JsonResponse, Http404
+from drf_yasg.utils import swagger_auto_schema
+from rest_framework import authentication, permissions, parsers
 from rest_framework import views
 from rest_framework.response import Response
-from rest_framework import authentication, permissions, parsers
 
+from imgdownloader.exceptions import get_exception_definition
 from . import serializers
 from .models import Document
 from .tasks import DocumentTask
 
-from imgdownloader.exceptions import get_exception_definition
-
-from drf_yasg.utils import swagger_auto_schema
-
-
-import logging
 logger = logging.getLogger('admin_log')
 
 
@@ -31,7 +26,7 @@ class BaseUploadAPIView(views.APIView):
             return True if request.user.is_superuser or obj.user == request.user else False
         else:
             return False
-    
+
     def launch_task(self, obj: Document):
         new_task = DocumentTask()
         task_run = new_task.delay(obj.id)
@@ -40,7 +35,7 @@ class BaseUploadAPIView(views.APIView):
 
     def get_object(self, request, pk):
         try:
-            obj = self.model.objects.get(pk=pk) 
+            obj = self.model.objects.get(pk=pk)
         except self.model.DoesNotExist:
             raise Http404
         else:
@@ -49,25 +44,26 @@ class BaseUploadAPIView(views.APIView):
             return obj
 
     # def get_object_clone(self, object):
-        # """
-        # Returns cloned model instance
-        # :param object:
-        # :return:
-        # """
-        # new_object = deepcopy(object)
-        # new_object.id = None
-        # new_object.save()
-        # return new_object
+    # """
+    # Returns cloned model instance
+    # :param object:
+    # :return:
+    # """
+    # new_object = deepcopy(object)
+    # new_object.id = None
+    # new_object.save()
+    # return new_object
 
-class DocumentUploadAPIView(BaseUploadAPIView): 
-    parser_classes = (parsers.MultiPartParser, )
+
+class DocumentUploadAPIView(BaseUploadAPIView):
+    parser_classes = (parsers.MultiPartParser,)
 
     @swagger_auto_schema(
         request_body=serializers.DocumentUploadRequestSerializer,
         responses={
             201: serializers.DocumentUploadResponseSerializer,
             400: "Validation errors",
-        },        
+        },
         tags=['upload_db']
     )
     def post(self, request, format=None):
@@ -105,7 +101,7 @@ class DocumentAPIView(BaseUploadAPIView):
             200: serializers.DocumentStatusSerializer,
             403: get_exception_definition(403),
             404: get_exception_definition(404),
-        },        
+        },
         tags=['upload_db']
     )
     def get(self, request, document_id, format=None):
@@ -118,7 +114,7 @@ class DocumentAPIView(BaseUploadAPIView):
         document = self.get_object(request, document_id)
         response_serializer = serializers.DocumentStatusSerializer(document)
         return JsonResponse(response_serializer.data, status=200)
-    
+
     @swagger_auto_schema(
         request_body=serializers.DocumentUpdateSerializer,
         responses={
@@ -126,7 +122,7 @@ class DocumentAPIView(BaseUploadAPIView):
             400: "Validation errors",
             403: get_exception_definition(403),
             404: get_exception_definition(404),
-        },        
+        },
         tags=['upload_db']
     )
     def put(self, request, document_id, format=None):
@@ -157,7 +153,7 @@ class DocumentAPIView(BaseUploadAPIView):
             400: "Validation errors",
             403: get_exception_definition(403),
             404: get_exception_definition(404),
-        },        
+        },
         tags=['upload_db']
     )
     def delete(self, request, document_id, format=None):
@@ -215,7 +211,7 @@ class UtilsLoadConnectionsView(views.APIView):
         request_body=None,
         responses={
             200: serializers.ListDBConnectionsResponseSerializer,
-        },        
+        },
         tags=['utils']
     )
     def get(self, request, format=None):
@@ -226,13 +222,13 @@ class UtilsLoadConnectionsView(views.APIView):
          - Access scope: users
         """
         db_connections = [conn for conn in Document.objects.filter(
-                user=request.user,
-                status=2
-            ).values_list(
-                'db_connection',
-                flat=True
-            ).distinct() if len(conn) > 0
-        ] + ['new-pg', 'new-or']
+            user=request.user,
+            status=2
+        ).values_list(
+            'db_connection',
+            flat=True
+        ).distinct() if len(conn) > 0
+                          ] + ['new-pg', 'new-or']
         response = {
             'connections': [
                 self.model.name_db_connection(conn) for conn in db_connections

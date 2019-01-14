@@ -1,21 +1,20 @@
-from .models import User
-from .tasks import send_registration_email
-from . import serializers
-
-from rest_framework import views
-from rest_framework.response import Response
-from rest_framework import authentication, permissions
-
-from rest_auth import views as rest_auth_views
-from rest_auth import serializers as rest_auth_serializers
+import logging
 
 from drf_yasg.utils import swagger_auto_schema
+from rest_auth import serializers as rest_auth_serializers
+from rest_auth import views as rest_auth_views
+from rest_framework import authentication, permissions
+from rest_framework import views
+from rest_framework.response import Response
 
-import logging
+from . import serializers
+from .models import User
+from .tasks import send_registration_email
+
 logger = logging.getLogger('admin_log')
 
 
-class LoginAPIView(rest_auth_views.LoginView):    
+class LoginAPIView(rest_auth_views.LoginView):
     @swagger_auto_schema(
         request_body=serializers.UserLoginRequestSerializer,
         responses={
@@ -23,9 +22,9 @@ class LoginAPIView(rest_auth_views.LoginView):
             400: "Validation and login errors",
             500: "Server errors"
         },
-        security=[], 
+        security=[],
         tags=['auth']
-    )    
+    )
     def post(self, request, *args, **kwargs):
         """
         Login user.
@@ -33,7 +32,7 @@ class LoginAPIView(rest_auth_views.LoginView):
          - Authorization: none
          - Access scope: anyone
         """
-        response = super(LoginAPIView, self).post(request, *args, **kwargs)    
+        response = super(LoginAPIView, self).post(request, *args, **kwargs)
         if response.status_code == 200:
             logger.info(f'[# System] User {request.data["username"]} successfully logged in')
         elif "username" in request.data:
@@ -43,7 +42,7 @@ class LoginAPIView(rest_auth_views.LoginView):
         return response
 
 
-class LogoutAPIView(rest_auth_views.LogoutView): 
+class LogoutAPIView(rest_auth_views.LogoutView):
     @swagger_auto_schema(
         operation_description="""
         Calls Django logout method and delete the Token object assigned to the current User object.
@@ -61,7 +60,7 @@ class LogoutAPIView(rest_auth_views.LogoutView):
         tags=['auth']
     )
     def get(self, request, *args, **kwargs):
-        response = super(LogoutAPIView, self).get(request, *args, **kwargs)    
+        response = super(LogoutAPIView, self).get(request, *args, **kwargs)
         if response.status_code == 200:
             logger.info(f'[# System] User {request.user.username} successfully logged out')
         else:
@@ -83,7 +82,7 @@ class LogoutAPIView(rest_auth_views.LogoutView):
          - Authorization: Token, Session
          - Access scope: users
         """
-        response = super(LogoutAPIView, self).post(request, *args, **kwargs)    
+        response = super(LogoutAPIView, self).post(request, *args, **kwargs)
         if response.status_code == 200:
             logger.info(f'[# System] User {request.user.username} successfully logged out')
         else:
@@ -94,7 +93,7 @@ class LogoutAPIView(rest_auth_views.LogoutView):
 class RegistrationByAdminView(views.APIView):
     authentication_classes = (authentication.TokenAuthentication,)
     permission_classes = (permissions.IsAdminUser,)
-    
+
     @swagger_auto_schema(
         request_body=serializers.UserCreateRequestSerializer,
         responses={
@@ -139,7 +138,7 @@ class RegistrationView(views.APIView):
             400: "Validation errors",
             500: "Server errors"
         },
-        security=[], 
+        security=[],
         tags=['auth']
     )
     def post(self, request, format=None):

@@ -1,26 +1,26 @@
 <html>
-    <head>
-        <link href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.0/css/bootstrap.min.css" rel="stylesheet" id="bootstrap-css">
-        <link href="/static/css/signup.css" rel="stylesheet">
-        <link rel="stylesheet" href="//stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+<head>
+    <link href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.0/css/bootstrap.min.css" rel="stylesheet" id="bootstrap-css">
+    <link href="/static/css/signup.css" rel="stylesheet">
+    <link rel="stylesheet" href="//stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
 
-        <script src="//code.jquery.com/jquery-1.11.1.min.js"></script>
-        <script src="//cdn.jsdelivr.net/npm/jquery-validation@1.19.0/dist/jquery.validate.js"></script>
-        <script src="//cdn.jsdelivr.net/npm/jquery-validation@1.19.0/dist/additional-methods.js"></script>
-        <script src="//cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js"></script>
-        <script src="//maxcdn.bootstrapcdn.com/bootstrap/3.3.0/js/bootstrap.min.js"></script>
-        <script src="/static/js/signup.js"></script>
-        {% block head %}
+    <script src="//code.jquery.com/jquery-1.11.1.min.js"></script>
+    <script src="//cdn.jsdelivr.net/npm/jquery-validation@1.19.0/dist/jquery.validate.js"></script>
+    <script src="//cdn.jsdelivr.net/npm/jquery-validation@1.19.0/dist/additional-methods.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js"></script>
+    <script src="//maxcdn.bootstrapcdn.com/bootstrap/3.3.0/js/bootstrap.min.js"></script>
+    <script src="/static/js/signup.js"></script>
+    {% block head %}
 
-        {% endblock %}
-    </head>
+    {% endblock %}
+</head>
 
-    <body>
-        {% include 'navbar.html' %}
-        <div class="container">
-                <div class="row">
-                    {% block content %}{% endblock %}
-                </div>
-            </div>
-    </body>
+<body>
+{% include 'navbar.html' %}
+<div class="container">
+    <div class="row">
+        {% block content %}{% endblock %}
+    </div>
+</div>
+</body>
 </html>

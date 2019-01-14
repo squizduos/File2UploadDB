@@ -2,7 +2,7 @@ function _parse(str) {
     var args = [].slice.call(arguments, 1),
         i = 0;
 
-    return str.replace(/%s/g, function() {
+    return str.replace(/%s/g, function () {
         return args[i++];
     });
 }
@@ -15,7 +15,7 @@ function _extendDict(source, added) {
             }
         } else {
             source[key] = added[key];
-        }            
+        }
     }
     return source
 }
@@ -24,7 +24,8 @@ postgres_ajax_connector_default_values = {
     "ajax": {
         "url": "",
         "method": "GET",
-        "beforeSend": function(){}
+        "beforeSend": function () {
+        }
     },
     "fields": {
         "id_field": "id",
@@ -77,7 +78,7 @@ class ProgressBarAJAXConnector {
         this.STATUS_ERROR = 0;
     }
 
-    setProgressBarState(state="ready", text="", percent=0) {
+    setProgressBarState(state = "ready", text = "", percent = 0) {
         if (state == "ready") {
             this.bar.removeClass("progress-bar-success");
             this.bar.removeClass("progress-bar-danger");
@@ -110,13 +111,13 @@ class ProgressBarAJAXConnector {
             console.log("Incorrect usage of setUploadProgressBar");
         }
     }
-    
+
     started(data) {
         // Write launched info to class
         this.item_id = data[this.fields['id_field']];
         this.setProgressBarState("ready", this.texts.onLaunch);
         // Run custom action
-        
+
         this.monitor(this);
     }
 
@@ -127,17 +128,17 @@ class ProgressBarAJAXConnector {
         var thisClass = this;
         $.ajax({
             beforeSend: this.startAjax.beforeSend,
-            url: _parse(this.startAjax.url, item_id), 
+            url: _parse(this.startAjax.url, item_id),
             type: this.startAjax.method,
             data: data,
-            success: function(data, textStatus, jqXHR) {
+            success: function (data, textStatus, jqXHR) {
                 thisClass.started(data);
             },
-            error: function(requestObject, error, errorThrown) {
+            error: function (requestObject, error, errorThrown) {
                 thisClass.error(error);
             },
             dataType: "json",
-        });                
+        });
     }
 
     stop() {
@@ -152,26 +153,26 @@ class ProgressBarAJAXConnector {
             beforeSend: thisClass.monitorAjax.beforeSend,
             url: _parse(thisClass.monitorAjax.url, this.item_id),
             type: thisClass.monitorAjax.method,
-            success: function(data, textStatus, jqXHR) {      
+            success: function (data, textStatus, jqXHR) {
                 status = thisClass.process_data(data);
                 if (status == thisClass.STATUS_LAUNCH) {
                     setTimeout(thisClass.monitor(thisClass), 5000)
                 }
             },
-            error: function(requestObject, error, errorThrown) {
+            error: function (requestObject, error, errorThrown) {
                 thisClass.error(error);
             },
             dataType: "json",
         });
         thisClass.actions.onMonitor();
     }
-    
+
     process_data(data) {
         var file_id = status = data[this.fields['id_field']];
         var status = data[this.fields['status_field']];
         var error_message = data[this.fields['error_field']];
         var percent = data[this.fields['percent_field']];
-        switch(status) {
+        switch (status) {
             case this.STATUS_ERROR:
                 this.error(error_message);
                 break;
@@ -190,21 +191,21 @@ class ProgressBarAJAXConnector {
         }
         return status;
     }
-    
+
     launch(err, percent) {
         var text = (this.texts['onMonitor'] ? this.texts['onMonitor'] : err);
         text = _parse(text, percent);
         this.setProgressBarState("launch", text, percent);
         this.actions.onError();
     }
-    
+
     error(err) {
         var text = (this.texts['onError'] ? this.texts['onError'] : err);
         text = _parse(text, err);
         this.setProgressBarState("error", text);
         this.actions.onError();
     }
-    
+
     finish(err) {
         var text = (this.texts['onFinish'] ? this.texts['onFinish'] : err);
         text = _parse(text, err);

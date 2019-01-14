@@ -13,34 +13,31 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
+from django.conf import settings
+from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import include, path, re_path
-from django.conf.urls.static import static
-from django.conf import settings
 from django.views.decorators.csrf import csrf_exempt
-
+from drf_yasg import openapi
+from drf_yasg.views import get_schema_view
 from rest_framework import permissions
 
 from authentitcation import views as auth_api_views, web as auth_web_views
-
 from fileupload import views as upload_api_views, web as upload_web_views
 
-from drf_yasg.views import get_schema_view
-from drf_yasg import openapi
-
 schema_view = get_schema_view(
-   openapi.Info(
-      title="UploadToDB",
-      default_version='v1',
-      description="Simple project to upload CSV, XLS(X) and DAT files to powerful server",
-      terms_of_service="https://restapi.img-test.squizduos.ru/",
-      contact=openapi.Contact(email="squizduos@gmail.com"),
-      license=openapi.License(name="Commerical License"),
-      url="/api/",
-   ),
-   url="https://restapi.img-test.squizduos.ru",
-   public=True,
-   permission_classes=(permissions.AllowAny, ),
+    openapi.Info(
+        title="UploadToDB",
+        default_version='v1',
+        description="Simple project to upload CSV, XLS(X) and DAT files to powerful server",
+        terms_of_service="https://restapi.img-test.squizduos.ru/",
+        contact=openapi.Contact(email="squizduos@gmail.com"),
+        license=openapi.License(name="Commerical License"),
+        url="/api/",
+    ),
+    url="https://restapi.img-test.squizduos.ru",
+    public=True,
+    permission_classes=(permissions.AllowAny,),
 )
 
 urlpatterns = [

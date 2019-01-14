@@ -1,12 +1,12 @@
-from django.views.generic import View
+import logging
 
-from django.shortcuts import render, redirect
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
+from django.shortcuts import render, redirect
 from django.urls import reverse_lazy as reverse
+from django.views.generic import View
 
 from .utils import file_read_from_tail
 
-import logging
 logger = logging.getLogger('admin_log')
 
 

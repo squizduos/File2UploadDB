@@ -1,15 +1,15 @@
+import logging
 import os
 
 from rest_framework import serializers
 
 from .models import Document, ACCEPTED_EXTENSIONS
 
-import logging
 logger = logging.getLogger('admin_log')
 
 
 class DocumentUploadRequestSerializer(serializers.ModelSerializer):
-    def __init__(self,  *args, original_filename="example.csv", user=None, **kwargs):
+    def __init__(self, *args, original_filename="example.csv", user=None, **kwargs):
         super(DocumentUploadRequestSerializer, self).__init__(*args, **kwargs)
         self.original_filename = original_filename
         self.user = user
@@ -49,7 +49,7 @@ class DocumentUploadResponseSerializer(serializers.ModelSerializer):
         return obj.document.path
 
     def get_file_name(self, obj):
-        return os.path.basename(obj.document.name)            
+        return os.path.basename(obj.document.name)
 
     def get_file_type(self, obj):
         if obj.get_file_extension() not in ACCEPTED_EXTENSIONS:
@@ -58,13 +58,13 @@ class DocumentUploadResponseSerializer(serializers.ModelSerializer):
 
     def get_file_header_line(self, obj):
         return 'not applicable' if obj.get_file_extension() in ["DTA"] else ""
-    
+
     def get_file_separator(self, obj):
         return 'not applicable' if obj.get_file_extension() in ["XLS", "XLSX", "DTA"] else ""
 
     def get_table_name(self, obj):
         return obj.get_filename_witout_extension()
-    
+
     def get_enabled_for_editing(self, obj):
         enabled = obj.get_enabled_for_editing_by_default()
         if obj.get_file_extension() in ["CSV", "XLS", "XLSX"]:

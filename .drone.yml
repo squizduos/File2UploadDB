@@ -3,7 +3,7 @@ kind: pipeline
 name: default
 
 steps:
-- name: telegram-notify-start-build:
+- name: telegram-notify-start-build
   image: appleboy/drone-telegram
   secrets:
   - telegram_token
@@ -66,7 +66,7 @@ steps:
     - success
 
 - name: deploy-local
-  image: docker/compose:1.23.2
+  image: docker:dind
   commands:
   - set -a
   - export BRANCH=${DRONE_COMMIT_BRANCH}

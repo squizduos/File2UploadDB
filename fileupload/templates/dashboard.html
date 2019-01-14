@@ -1,14 +1,17 @@
 {% extends 'base.html' %}
 
 {% block head %}
-<script src="/static/js/dragndrop.js"></script>
-<script src="/static/js/popover.js"></script>
-<script src="/static/js/upload.js"></script>
-<script src="/static/js/jquery.formautofill.min.js"></script>
+    <script src="/static/js/progressbar.js"></script>
+    <script src="/static/js/dragndrop.js"></script>
+    <script src="/static/js/popover.js"></script>
+    <script src="/static/js/upload.js"></script>
+    <script src="/static/js/jquery.formautofill.min.js"></script>
+
+    <script src="/static/js/utils.js"></script>
 {% endblock %}
 
 {% block content %}
-<div class="col-md-12">
+    <div class="col-md-12">
         <div class="panel-group">
             <div class="panel panel-login">
                 <div class="panel-body">
@@ -36,7 +39,10 @@
                 </div>
             </div>
         </div>
-    
+
     </div>
-</div>
+    </div>
+
+
+    {% include "forms/modal-select-strategy.html" %}
 {% endblock %}

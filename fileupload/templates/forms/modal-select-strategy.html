@@ -1,0 +1,53 @@
+<!-- Modal -->
+<div class="modal fade" id="selectStrategyModal" tabindex="-1" role="dialog" aria-labelledby="selectStrategyModalLabel"
+     aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="selectStrategyModalLabel">Uploader needs your action</h5>
+                {#        <button type="button" class="close" data-dismiss="modal" aria-label="Close">#}
+                {#          <span aria-hidden="true">&times;</span>#}
+                {#        </button>#}
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-lg-12">
+                        <p>
+                            This table is exist on your DBMS; select one of the next variants to continue or stop
+                            process and change parameters manually.
+                        </p>
+                        <div class="alert alert-warning" role="alert">
+                            WARNING: append to existing table may cause error, if table schemas are not equal! Be sure,
+                            that you know what to do.
+                        </div>
+                        <hr>
+                        <form id="strategy-info-form" role="form" style="display: block;">
+                            <div class="form-group">
+                                <label for="db_strategy">action:</label>
+                                <select class="form-control" id="db_strategy" name="db_strategy" required>
+                                    <option value="1" selected>Add to another table</option>
+                                    <option value="2">Append to existing table</option>
+                                    <option value="3">Replace existing table</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="strategy_table_name">table name:</label>
+                                <input class="form-control" id="strategy_table_name" name="strategy_table_name" required
+                                       minlength="1" type="text">
+                            </div>
+                            <div class="form-group">
+                                <div class="alert alert-danger form-error" role="alert" hidden>
+
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal" id="cancelUpload">Cancel</button>
+                <button type="button" class="btn btn-primary" id="continueUpload">Continue uploading</button>
+            </div>
+        </div>
+    </div>
+</div>

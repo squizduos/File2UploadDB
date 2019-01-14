@@ -1,20 +1,17 @@
 # main/tasks.py
-import os, traceback
-
 import logging
-logger = logging.getLogger('admin_log')
-
-from django.conf import settings
-
-import pandas
-
-from sqlalchemy import create_engine, types
+import traceback
 
 import celery.states
+import pandas
+from sqlalchemy import create_engine, types
 
 from imgdownloader.celery import app
 from .models import Document
 from .utils import chunker
+
+logger = logging.getLogger('admin_log')
+
 
 class DocumentTask(celery.Task):
     ignore_result = True
@@ -31,36 +28,56 @@ class DocumentTask(celery.Task):
         self.update_with_pending(status_string, 0)
         self.conn, err = self.connect_to_db(self.document)
         if err:
-            err_string = f'Step 1: connect to DBMS {self.document.db_type} at host {self.document.db_host} is failed; error {err}'
+            err_string = (
+                f'Step 1: connect to DBMS {self.document.db_type} at host {self.document.db_host} is failed;'
+                f'error {err}'
+            )
             return self.update_with_error(err_string)
         else:
             status_string = f"Step 1: Remote DBMS connection was estabilished (server {self.document.db_host})."
             self.update_with_pending(status_string, 0)
-        # Step 2: parse file to dictonary
-        status_string = f"Step 2: Parsing file..."
+        # Step 2: check table
+        if self.document.db_strategy in [0, 1]:
+            table_exists, err = self.check_table(self.document)
+            if table_exists:
+                return self.update_with_pause()
+            elif err:
+                err_string = (
+                    f'Step 2: checking table for DBMS {self.document.db_type} at host {self.document.db_host} is failed;'
+                    f'error {err}'
+                )
+                return self.update_with_error(err_string)
+        # Step 3: parse file to dictonary
+        status_string = f"Step 3: Parsing file..."
         self.update_with_pending(status_string, 0)
         data = self.parse_file(self.document)
         if not isinstance(data, pandas.core.frame.DataFrame):
-            err_string = f'File {self.document.id}, was not succesfully uploaded; error while parsing; not compartble type {type(data)}'
+            err_string = (
+                f'Step 3: File {self.document.id}, was not succesfully uploaded; '
+                f'error while parsing, not compartble type {type(data)}'
+            )
             return self.update_with_error(err_string)
         else:
             status_string = f"Step 2: Parsing file {self.document.file_type} is succeed."
             self.update_with_pending(status_string, 0)
-        # Step 3: write all to table
-        status_string = "Step 3: Uploading file to DBMS..."
+        # Step 4: write all to table
+        status_string = "Step 4: Uploading file to DBMS..."
         self.update_with_pending(status_string, 0)
-        chunksize = int(len(data) / 100) if len(data) > 200 else len(data) # 1%
+        chunksize = int(len(data) / 100) if len(data) > 200 else len(data)  # 1%
         for i, cdf in enumerate(chunker(data, chunksize)):
             status, err = self.write_row_to_db(self.document, cdf)
             if not status:
-                err_string = f"File {self.document.id}, was not succesfully uploaded; error while inserting to DBMS, err {err}."
+                err_string = (
+                    f'Step 4: File {self.document.id}, was not succesfully uploaded; '
+                    f'error while inserting to DBMS, err {err}.'
+                )
                 return self.update_with_error(err_string)
-            status_string = "Step 3: Uploading file to DBMS..."
+            status_string = "Step 4: Uploading file to DBMS..."
             self.update_with_pending(status_string, i)
-        return self.update_with_success()  
+        return self.update_with_success()
 
     def on_failure(self, exc, task_id, args, kwargs, einfo):
-        logger.info(f"File {self.file_id} uploading faled; celery error")
+        logger.info(f"[# Document {self.file_id}] Uploading to DBMS faled; celery error")
         document = Document.objects.get(id=self.file_id)
         self.log += f'Celery error.\n'
         document.error = "Celery error"
@@ -69,6 +86,7 @@ class DocumentTask(celery.Task):
         document.save()
 
     def update_with_error(self, err_string):
+        # [# Document {}]
         logger.info(f"[# Document {self.file_id}] {err_string}")
         self.log += f'{err_string}\n'
         self.document.status = -1
@@ -88,6 +106,13 @@ class DocumentTask(celery.Task):
         self.document.percent = percent
         self.document.save()
 
+    def update_with_pause(self):
+        logger.info(f"[# Document {self.file_id}] paused; table exists!")
+        self.document.status = 3
+        self.document.log = self.log
+        self.document.save()
+        return 1
+
     def update_with_success(self):
         logger.info(f"[# Document {self.file_id}] successfully uploaded!")
         self.document.percent = 100
@@ -97,29 +122,26 @@ class DocumentTask(celery.Task):
         return 1
 
     def connect_to_db(self, document):
-        if document.db_type == 'PostgreSQL':
+        connection_strings = {
+            "PostgreSQL": "postgresql://{uname}:{pw}@{ip}:{port}/{db}".format(
+                uname=document.db_username,
+                pw=document.db_password,
+                ip=document.db_host,
+                port=document.db_port,
+                db=document.db_name
+            ),
+            "Oracle": 'oracle+cx_oracle://{uname}:{pw}@{ip}:{port}/{SID}'.format(
+                uname=document.db_username,
+                pw=document.db_password,
+                ip=document.db_host,
+                port=document.db_port,
+                SID=document.db_sid
+            )
+        }
+
+        if document.db_type in connection_strings.keys():
             try:
-                connection_string = "postgresql://{uname}:{pw}@{ip}:{port}/{db}".format(
-                    uname=document.db_username,
-                    pw=document.db_password,
-                    ip=document.db_host,
-                    port=document.db_port,
-                    db=document.db_name
-                )
-                conn = create_engine(connection_string)
-                return conn, None
-            except Exception as e:
-                return None, str(e)
-        elif document.db_type == 'Oracle':
-            try:
-                connection_string = 'oracle+cx_oracle://{uname}:{pw}@{ip}:{port}/{SID}'.format(
-                    uname=document.db_username,
-                    pw=document.db_password,
-                    ip=document.db_host,
-                    port=document.db_port,
-                    SID=document.db_sid
-                )
-                conn = create_engine(connection_string)
+                conn = create_engine(connection_strings[document.db_type])
                 return conn, None
             except Exception as e:
                 return None, str(e)
@@ -146,7 +168,7 @@ class DocumentTask(celery.Task):
                 data_frame = data_frame.drop(indexes_for_drop, axis=1)
                 return data_frame
             except Exception as e:
-                return str(e)    
+                return str(e)
         elif document.file_type == 'DTA':
             try:
                 data_frame = pandas.read_stata(document.document.path)
@@ -155,9 +177,10 @@ class DocumentTask(celery.Task):
                 return str(e)
 
     def write_row_to_db(self, document, data):
+        if_exists = "replace" if self.document.db_strategy == 3 else "append"
         if document.db_type == 'PostgreSQL':
             try:
-                data.to_sql(document.table_name, self.conn, if_exists='append')
+                data.to_sql(document.table_name, self.conn, if_exists=if_exists)
             except Exception as e:
                 return False, str(e)
             else:
@@ -167,14 +190,32 @@ class DocumentTask(celery.Task):
                 ntyp = {d: types.VARCHAR(310) for d in data.columns[data.isnull().all()].tolist()}
                 to_vc = {c: types.VARCHAR(300) for c in data.columns[data.dtypes == 'object'].tolist()}
                 ntyp.update(to_vc)
-                data.to_sql(document.table_name, self.conn, if_exists='append', dtype=ntyp, index=False)
-            except Exception as e:                
+                data.to_sql(document.table_name, self.conn, if_exists=if_exists, dtype=ntyp, index=False)
+            except Exception as e:
                 logger.info(f"[# Document {self.file_id}] error {traceback.format_exc()}, data: {data}")
                 return False, str(e)
             else:
                 return True, None
         else:
             return False, "Incorrect DB type"
-        
+
+    def check_table(self, document):
+        try:
+            engine = self.conn
+            if document.db_type == "PostgreSQL":
+                result = engine.dialect.has_table(engine, document.table_name)
+            else:
+                response = None
+                with engine.connect() as connection:
+                    rs = connection.execute(
+                        f"SELECT COUNT(*) FROM user_tables WHERE table_name = '{document.table_name.upper()}'")
+                    response = rs.fetchone()[0]
+                result = response > 0
+            logger.info(f"[# Document {self.file_id}] checking table existing {result}")
+        except Exception as e:
+            return None, str(e)
+        else:
+            return result, None
+
 
 app.tasks.register(DocumentTask())

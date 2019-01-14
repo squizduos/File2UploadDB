@@ -1,37 +1,54 @@
 <nav class="navbar navbar-default">
     <div class="container-fluid">
-      <!-- Left -->
-      <div class="navbar-header">
-        <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1" aria-expanded="false">
-          <span class="sr-only">Toggle navigation</span>
-          <span class="icon-bar"></span>
-          <span class="icon-bar"></span>
-          <span class="icon-bar"></span>
-        </button>
-        <a class="navbar-brand" href="/">File2DB</a>
-      </div>
-  
-      <!-- Right -->
-      <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
-        <ul class="nav navbar-nav">
-          {% if user.is_authenticated %}  
-                <li {% if request.path != "/dashboard/admin/" and request.path != "/signup/admin/register" %} class="active" {% endif %}><a href="/dashboard">User space</a></li>
-            {% if user.is_superuser %}
-                <li {% if request.path == "/dashboard/admin/" or request.path == "/signup/admin/register" %} class="active" {% endif %}><a href="/dashboard/admin">Admin space</a></li>
+        <!-- Left -->
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle collapsed" data-toggle="collapse"
+                    data-target="#bs-example-navbar-collapse-1" aria-expanded="false">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/">File2DB</a>
+        </div>
+
+        <script>
+            $(document).ready(function () {
+                var admin_urls = {
+                    "{% url 'web-admin-dashboard-view' %}": undefined,
+                    "{% url 'web-register-view' %}": undefined
+                };
+                if (window.location.pathname in admin_urls) {
+                    $("#adminZone").addClass("active");
+                } else {
+                    $("#userZone").addClass("active");
+                }
+            });
+        </script>
+        <!-- Right -->
+        <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+            <ul class="nav navbar-nav">
+                {% if user.is_authenticated %}
+                    <li id="userZone"><a href="{% url 'web-dashboard-view' %}">User space</a></li>
+                    {% if user.is_superuser %}
+                        <li id="adminZone"><a href="{% url 'web-admin-dashboard-view' %}">Admin space</a></li>
+                    {% endif %}
+                {% else %}
+                    <li id="userZone"><a href="{% url 'web-login-view' %}">Login space</a></li>
+                {% endif %}
+            </ul>
+            {% if user.is_authenticated %}
+                <ul class="nav navbar-nav navbar-right">
+                    <li><p class="navbar-text">Hi, {{ user.username }}!</p></li>
+                    <li><a href="{% url 'web-logout-view' %}">Logout</a></li>
+                </ul>
+            {% else %}
+                <ul class="nav navbar-nav navbar-right">
+                    <li><a href="{% url 'web-login-view' %}">Login</a></li>
+                </ul>
             {% endif %}
-          {% endif %}
-        </ul>
-        {% if user.is_authenticated %}
-            <ul class="nav navbar-nav navbar-right">
-                <li><p class="navbar-text">Hi, {{ user.username }}!</p></li>
-                <li><a href="/logout">Logout</a></li>
-            </ul>
-        {% else %}
-            <ul class="nav navbar-nav navbar-right">
-                <li><a href="/login">Login</a></li>
-            </ul>
-        {% endif %}
-      </div>
+        </div>
     </div>
-  </nav>
+</nav>
+  
   

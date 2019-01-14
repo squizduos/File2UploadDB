@@ -1,7 +1,7 @@
 imgdownloader/production_static
 documents/
 info.log
-__pycache__/
+*/__pycache__/
 *.py[cod]
 venv/
 node_modules/

@@ -74,38 +74,38 @@ steps:
   when:
     status:
     - success
-#
-#- name: telegram-notify-deploy-finished
-#  image: appleboy/drone-telegram
-#  settings:
-#    token: 475550485:AAEPwrdG__WucKhO41aUi2J1ivu78cOu0nk
-#    to: 57439615
-#    format: markdown
-#    message: >
-#        {{#success build.status}}
-#        👌 Сборка проекта `{{repo.name}} - {{commit.branch}} rev.{{build.number}}` успешно завершена.
-#
-#
-#        Сборка проекта шла с {{datetime build.started "15:04:05" "GMT+3"}} по {{datetime build.finished "15:04:05" "GMT+3"}} {{datetime build.finished "02.01.2006" "GMT+3"}} г.
-#
-#
-#        Детальный лог доступен по [ссылке]({{build.link}}).
-#
-#
-#        Сервис возобновил свою работу на [(https://{{commit.branch}}.{{repo.name}}.squizduos.ru]((https://{{commit.branch}}.{{repo.name}}.squizduos.ru).
-#        {{else}}
-#        ❌ **ВНИМАНИЕ! ВНИМАНИЕ!**
-#
-#
-#        Попытка запуска неудачная! Сервис [(https://{{commit.branch}}.{{repo.name}}.squizduos.ru]((https://{{commit.branch}}.{{repo.name}}.squizduos.ru) недоступен.
-#
-#
-#        Немедленно сообщите @squizduos.
-#        {{/success}}
-#    when:
-#    status:
-#    - success
-    - failure
+
+- name: telegram-notify-deploy-finished
+  image: appleboy/drone-telegram
+  settings:
+    token: 475550485:AAEPwrdG__WucKhO41aUi2J1ivu78cOu0nk
+    to: 57439615
+    format: markdown
+    message: >
+        {{#success build.status}}
+        👌 Сборка проекта `{{repo.name}} - {{commit.branch}} rev.{{build.number}}` успешно завершена.
+
+
+        Сборка проекта шла с {{datetime build.started "15:04:05" "GMT+3"}} по {{datetime build.finished "15:04:05" "GMT+3"}} {{datetime build.finished "02.01.2006" "GMT+3"}} г.
+
+
+        Детальный лог доступен по [ссылке]({{build.link}}).
+
+
+        Сервис возобновил свою работу на [(https://{{commit.branch}}.{{repo.name}}.squizduos.ru]((https://{{commit.branch}}.{{repo.name}}.squizduos.ru).
+        {{else}}
+        ❌ **ВНИМАНИЕ! ВНИМАНИЕ!**
+
+
+        Попытка запуска неудачная! Сервис [(https://{{commit.branch}}.{{repo.name}}.squizduos.ru]((https://{{commit.branch}}.{{repo.name}}.squizduos.ru) недоступен.
+
+
+        Немедленно сообщите @squizduos.
+        {{/success}}
+    when:
+      status:
+      - success
+      - failure
 
 volumes:
 - name: dockersock

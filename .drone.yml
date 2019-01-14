@@ -1,26 +1,15 @@
----
 kind: pipeline
 name: default
 
 steps:
-- name: telegram-notify-start-build
-  image: appleboy/drone-telegram
-  settings:
-    secrets:
-    - telegram_token
-    to: 57439615
-    format: markdown
-    message: >
-        🕒 Начинаем собирать `{{repo.name}} - {{commit.branch}} rev.{{build.number}}`.
+- name: frontend
+  image: node
+  commands:
+  - npm install
+  - npm test
 
-
-        Автор - {{commit.author}}.
-
-
-        В случае успешной сборки проект будет размещен по [ссылке](https://{{commit.branch}}.{{repo.name}}.squizduos.ru)
-
-
-        Комментарий доступен ниже. Ссылка на коммит [прилагается](https://gogs.squizduos.ru/squizduos/{repo.name}/commit/{{commit.sha}}).
-
-
-        `{{commit.message}}`
+- name: backend
+  image: golang
+  commands:
+  - go build
+  - go test

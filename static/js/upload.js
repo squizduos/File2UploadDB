@@ -60,11 +60,18 @@ $(document).ready(function() {
                 "onMonitor": "Uploading %s%",
                 "onFinish": "File uploaded successfully!",
                 "onError": "Error uploading to DBMS: %s",
+                "onPause": "User action is required"
             },
             "actions": {
                 "onFinish": function(){
                     $('#afterUploadToDB').prop('style', 'display: block'); 
                 },
+                "onPause": function (file_id) {
+                   $("#file_id").val(file_id);
+                   $('#selectStrategyModal').modal('toggle');
+                   var table_name = $("#table_name").val();
+                   $("#strategy_table_name").val(table_name);
+                }
             }
         },
         timeout
@@ -130,6 +137,25 @@ $(document).ready(function() {
             alertDeleteError,
             window.location.reload(false)
         );
+    });
+
+    $('#cancelUpload').on('click', function(e) {
+        e.preventDefault();
+        apiCancelUploadFileToDBMS(e);
+    });
+
+    $('#continueUpload').on('click', function(e) {
+        e.preventDefault();
+        apiContinueUploadFileToDBMS(e);
+    });
+
+    $('#db_strategy').on("change", function() {
+        selected_strategy = $("#db_strategy").val();
+        if (selected_strategy != "1") {
+            webChangeEditing("strategy_table_name", false, "not applicable");
+        } else {
+            webChangeEditing("strategy_table_name", true, "");
+        }
     });
 
     // Upload file to server
@@ -221,12 +247,59 @@ $(document).ready(function() {
         form_data = formValidateAndCollectData();
         if (form_data != undefined) {
             $('#workProgessBarDiv').prop('style', "display: block");
-            workProgressBarMonitor.start(form_data.file_id, form_data);       
+            workProgressBarMonitor.start(form_data.file_id, form_data);
         } else {
             if(!form_data.file_id) {
                 alert("You have to upload file before starting");
             }
         }
+    }
+
+    // API: Cancel upload file to DBMS
+    function apiCancelUploadFileToDBMS(event) {
+        $('#workProgessBarDiv').prop('style', "display: none");
+        workProgressBarMonitor.stop();
+    }
+
+
+    // API: Upload file to DBMS
+    function apiContinueUploadFileToDBMS(event) {
+        var validateRules = {
+            highlight: function(element) {
+                $(element).parent().addClass("has-error");
+            },
+            unhighlight: function(element) {
+                $(element).parent().removeClass("has-error");
+            },
+            errorPlacement: function(error, element) {
+                return false;
+            },
+            debug: true,
+            ignore: "[readonly=readonly]"
+        };
+        var form = $("#strategy-info-form");
+        form.validate(validateRules);
+        if (!(form.valid())) {
+            webShowModalError("Not all required fields are filled");
+            return null;
+        }
+        file_id = $('[id=file_id]')[0].value.toString();
+        db_strategy = $('[id=db_strategy]')[0].value.toString();
+        original_table_name = $("#table_name").val().toString();
+        table_name = $('[id=strategy_table_name]')[0].value.toString();
+        if ((db_strategy === "1") && (original_table_name === table_name)) {
+            webShowModalError("You can't upload to this table as is; please select another action or change table name");
+            return null;
+        }
+        form_data = {
+            "db_strategy": db_strategy,
+            "table_name": (db_strategy === "1" ? table_name : original_table_name)
+        };
+        $("#table_name").val(db_strategy === "1" ? table_name : original_table_name);
+        webShowModalError();
+        $('#selectStrategyModal').modal('toggle');
+        workProgressBarMonitor.start(file_id, form_data);
+
     }
     
     // API: Load connections list
@@ -340,6 +413,16 @@ $(document).ready(function() {
         } else if ($("#db_type").val() == "Oracle") {
             webChangeEditing("db_name", false, "not applicable");
             webChangeEditing("db_sid", true, "");
+        }
+    }
+
+    function webShowModalError(text) {
+        var error_div = $("#selectStrategyModal .form-error");
+        if (text !== undefined) {
+            error_div.removeAttr("hidden");
+            error_div.text(text);
+        } else {
+            error_div.attr("hidden", "hidden");
         }
     }
 

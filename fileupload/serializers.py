@@ -99,17 +99,18 @@ class DocumentUploadResponseSerializer(serializers.ModelSerializer):
 
 
 class DocumentUpdateSerializer(serializers.ModelSerializer):
-    file_type = serializers.CharField(required=True)
-    file_header_line = serializers.CharField(required=True)
-    file_separator = serializers.CharField(required=True)
-    table_name = serializers.CharField(required=True)
-    db_type = serializers.CharField(required=True)
-    db_username = serializers.CharField(required=True)
-    db_password = serializers.CharField(required=True)
-    db_host = serializers.CharField(required=True)
-    db_port = serializers.CharField(required=True)
+    file_type = serializers.CharField(required=False)
+    file_header_line = serializers.CharField(required=False)
+    file_separator = serializers.CharField(required=False)
+    table_name = serializers.CharField(required=False)
+    db_type = serializers.CharField(required=False)
+    db_username = serializers.CharField(required=False)
+    db_password = serializers.CharField(required=False)
+    db_host = serializers.CharField(required=False)
+    db_port = serializers.CharField(required=False)
     db_sid = serializers.CharField(required=False)
     db_name = serializers.CharField(required=False)
+    db_strategy = serializers.CharField(required=False)
 
     class Meta:
         model = Document
@@ -124,7 +125,8 @@ class DocumentUpdateSerializer(serializers.ModelSerializer):
             'db_host',
             'db_port',
             'db_sid',
-            'db_name'
+            'db_name',
+            'db_strategy'
         ]
 
 

@@ -1,5 +1,6 @@
 import os
 import re
+from copy import deepcopy
 
 from django.db import models
 
@@ -10,11 +11,18 @@ DOCUMENT_STATUS = (
     (0, 'Created'),
     (1, 'Uploading'),
     (2, 'Succesfully uploaded'),
+    (3, 'Paused'),
     (-1, 'Error on uploading')
 )
 
 ACCEPTED_EXTENSIONS = ['CSV', 'XLS', 'XLSX', 'DTA']
 
+UPLOADING_STRATEGIES = (
+    (0, 'Not set'),
+    (1, 'Rename'),
+    (2, 'Append'),
+    (3, 'Replace')
+)
 
 class Document(models.Model):
     original_filename = models.CharField(max_length=128, verbose_name="Original filename")
@@ -38,6 +46,7 @@ class Document(models.Model):
     db_port = models.CharField(max_length=100, blank=True)
     db_sid = models.CharField(max_length=100, blank=True)
     db_name = models.CharField(max_length=100, blank=True)
+    db_strategy = models.IntegerField(choices=UPLOADING_STRATEGIES, default=0)
     task_id = models.CharField(max_length=100, blank=True)
     status = models.IntegerField(choices=DOCUMENT_STATUS, default=0)
     error = models.CharField(max_length=100000, default="", blank=True, null=True)
@@ -73,6 +82,9 @@ class Document(models.Model):
         basic_info = f"Document #{self.id} by {self.user.username}, filename {self.original_filename}"
         if not self.document.name:
             basic_info += ", deleted from server"
+        if self.status == 3:
+            uploading = f"Uploading to {self.db_host} ({self.db_type}) paused, waiting user action..."
+            return f"{basic_info} || {uploading}"
         if self.status == 2:
             uploaded = f"Uploaded to {self.db_host} ({self.db_type}) successfully!"
             return f"{basic_info} || {uploaded}"
@@ -173,3 +185,20 @@ class Document(models.Model):
                 "name": name,
                 "value": conn
             }
+
+    def get_self_clone(self):
+        """
+        Returns cloned model instance
+        :param object:
+        :return:
+        """
+        new_object = deepcopy(self)
+        new_object.id = None
+        new_object.db_strategy = 0
+        new_object.status = 0
+        new_object.percent = 0
+        new_object.error = ""
+        new_object.log = ""
+        new_object.task_id = ""
+        new_object.save()
+        return new_object

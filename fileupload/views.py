@@ -1,4 +1,5 @@
 import json
+from copy import deepcopy
 
 from django.http import JsonResponse, Http404
 from django.core.exceptions import PermissionDenied
@@ -47,6 +48,16 @@ class BaseUploadAPIView(views.APIView):
                 raise PermissionDenied
             return obj
 
+    # def get_object_clone(self, object):
+        # """
+        # Returns cloned model instance
+        # :param object:
+        # :return:
+        # """
+        # new_object = deepcopy(object)
+        # new_object.id = None
+        # new_object.save()
+        # return new_object
 
 class DocumentUploadAPIView(BaseUploadAPIView): 
     parser_classes = (parsers.MultiPartParser, )
@@ -121,11 +132,14 @@ class DocumentAPIView(BaseUploadAPIView):
     def put(self, request, document_id, format=None):
         """
         Launches uploading file to DBMS with selected_parameters.
+        If document is successfully uploaded - copies document and launches new copy
 
          - Authorization: Token <token>
          - Access scope: users
         """
         document = self.get_object(request, document_id)
+        if document.status == 2:
+            document = document.get_self_clone()
         request_serializer = serializers.DocumentUpdateSerializer(document, data=request.data)
         if request_serializer.is_valid():
             document = request_serializer.save()

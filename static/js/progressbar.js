@@ -40,11 +40,18 @@ postgres_ajax_connector_default_values = {
         "onError": ""
     },
     "actions": {
-        "onReady": function(){},
-        "onLaunch": function(){},
-        "onMonitor": function(){},
-        "onFinish": function(){},
-        "onError": function(){}
+        "onReady": function () {
+        },
+        "onLaunch": function () {
+        },
+        "onMonitor": function () {
+        },
+        "onFinish": function () {
+        },
+        "onError": function () {
+        },
+        "onPause": function () {
+        },
     }
 }
 
@@ -66,6 +73,7 @@ class ProgressBarAJAXConnector {
         this.STATUS_READY = 0;
         this.STATUS_LAUNCH = 1;
         this.STATUS_FINISH = 2;
+        this.STATUS_PAUSE = 3;
         this.STATUS_ERROR = 0;
     }
 
@@ -131,7 +139,11 @@ class ProgressBarAJAXConnector {
             dataType: "json",
         });                
     }
-    
+
+    stop() {
+        this.setProgressBarState("ready", this.textOnReady);
+    }
+
     monitor(thisClass = undefined) {
         if (thisClass === undefined) {
             thisClass = this;
@@ -155,6 +167,7 @@ class ProgressBarAJAXConnector {
     }
     
     process_data(data) {
+        var file_id = status = data[this.fields['id_field']];
         var status = data[this.fields['status_field']];
         var error_message = data[this.fields['error_field']];
         var percent = data[this.fields['percent_field']];
@@ -167,6 +180,9 @@ class ProgressBarAJAXConnector {
                 break;
             case this.STATUS_LAUNCH:
                 this.launch(error_message, percent);
+                break;
+            case this.STATUS_PAUSE:
+                this.pause(error_message, file_id);
                 break;
             default:
                 this.error(error_message);
@@ -194,5 +210,12 @@ class ProgressBarAJAXConnector {
         text = _parse(text, err);
         this.setProgressBarState("finish", text);
         this.actions.onFinish();
+    }
+
+    pause(err, file_id) {
+        var text = (this.texts['onPause'] ? this.texts['onPause'] : err);
+        text = _parse(text, err);
+        this.setProgressBarState("launch", text);
+        this.actions.onPause(file_id);
     }
 }

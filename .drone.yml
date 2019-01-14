@@ -5,113 +5,22 @@ name: default
 steps:
 - name: telegram-notify-start-build
   image: appleboy/drone-telegram
-  secrets:
-  - telegram_token
-  to:
-  - 57439615
-  format: markdown
-  message: >
-      🕒 Начинаем собирать `{{repo.name}} - {{commit.branch}} rev.{{build.number}}`.
+  settings:
+    secrets:
+    - telegram_token
+    to: 57439615
+    format: markdown
+    message: >
+        🕒 Начинаем собирать `{{repo.name}} - {{commit.branch}} rev.{{build.number}}`.
 
 
-      Автор - {{commit.author}}.
+        Автор - {{commit.author}}.
 
 
-      В случае успешной сборки проект будет размещен по [ссылке](https://{{commit.branch}}.{{repo.name}}.squizduos.ru)
+        В случае успешной сборки проект будет размещен по [ссылке](https://{{commit.branch}}.{{repo.name}}.squizduos.ru)
 
 
-      Комментарий доступен ниже. Ссылка на коммит [прилагается](https://gogs.squizduos.ru/squizduos/{repo.name}/commit/{{commit.sha}}).
+        Комментарий доступен ниже. Ссылка на коммит [прилагается](https://gogs.squizduos.ru/squizduos/{repo.name}/commit/{{commit.sha}}).
 
 
-      `{{commit.message}}`
-
-- name: build
-  image: docker:dind
-  commands:
-  - docker-compose -p ${DRONE_REPO_NAME}-${DRONE_COMMIT_BRANCH} build
-  volumes:
-  - name: dockersock
-    path: /var/run/docker.sock
-  when:
-    status:
-    - success
-    
-- name: telegram-notify-start-deploy
-  image: appleboy/drone-telegram
-  secrets:
-  - telegram_token
-  to:
-  - 57439615
-  format: markdown
-  message: >
-      {{#success build.status}}
-      ⚠️ **Внимание! Заливка!**
-
-
-      В ближайшие 20 секунд сервис [{{commit.branch}}/{{repo.name}}](https://{{commit.branch}}.{{repo.name}}.squizduos.ru) может быть недоступен. Приносим свои извинения.
-      {{else}}
-      ❌ Сборка проекта `{{repo.name}} - {{commit.branch}} rev.{{build.number}}` не удалась.
-
-
-      Виновник торжества - {{commit.author}}. Коммит [прилагается](https://gogs.squizduos.ru/squizduos/{{repo.name}}/commit/{{commit.sha}}).
-
-
-      Детальный лог доступен по [ссылке]({{build.link}}).
-
-
-      Сервис продолжает работу в стабильном режиме по адресу [https://{{commit.branch}}.{{repo.name}}.squizduos.ru](https://{{commit.branch}}.{{repo.name}}.squizduos.ru).
-      {{/success}}
-  when:
-    status:
-    - success
-
-- name: deploy-local
-  image: docker:dind
-  commands:
-  - set -a
-  - export BRANCH=${DRONE_COMMIT_BRANCH}
-  - docker-compose -p ${DRONE_REPO_NAME}-${DRONE_COMMIT_BRANCH} up -d
-  volumes:
-  - name: dockersock
-    path: /var/run/docker.sock
-  when:
-    status:
-    - success
-    
-- name: telegram-notify-deploy-finished
-  image: appleboy/drone-telegram
-  secrets:
-  - telegram_token
-  to:
-   - 57439615
-  format: markdown
-  message: >
-      {{#success build.status}}
-      👌 Сборка проекта `{{repo.name}} - {{commit.branch}} rev.{{build.number}}` успешно завершена.
-
-
-      Сборка проекта шла с {{datetime build.started "15:04:05" "GMT+3"}} по {{datetime build.finished "15:04:05" "GMT+3"}} {{datetime build.finished "02.01.2006" "GMT+3"}} г.
-
-
-      Детальный лог доступен по [ссылке]({{build.link}}).
-
-
-      Сервис возобновил свою работу на [(https://{{commit.branch}}.{{repo.name}}.squizduos.ru]((https://{{commit.branch}}.{{repo.name}}.squizduos.ru).
-      {{else}}
-      ❌ **ВНИМАНИЕ! ВНИМАНИЕ!**
-
-
-      Попытка запуска неудачная! Сервис [(https://{{commit.branch}}.{{repo.name}}.squizduos.ru]((https://{{commit.branch}}.{{repo.name}}.squizduos.ru) недоступен.
-
-
-      Немедленно сообщите @squizduos.
-      {{/success}}
-  when:
-    status:
-    - success
-    - failure
-
-volumes:
-- name: dockersock
-  host:
-    path: /var/run/docker.sock
+        `{{commit.message}}`

@@ -318,6 +318,7 @@ $(document).ready(function() {
         }); 
     }
 
+    
     function formValidateAndCollectData() {
         var forms = ["file-info-form", "table-info-form", "db-info-form"];
         var validateRules = {

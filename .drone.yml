@@ -62,18 +62,18 @@ steps:
     status:
     - success
 
-#- name: deploy-local
-#  image: docker/compose
-#  commands:
-#  - set -a
-#  - export BRANCH=${DRONE_COMMIT_BRANCH}
-#  - docker-compose -p ${DRONE_REPO_NAME}-${DRONE_COMMIT_BRANCH} up -d
-#  volumes:
-#  - name: dockersock
-#    path: /var/run/docker.sock
-#  when:
-#    status:
-#    - success
+- name: deploy-local
+  image: docker/compose:1.23.2
+  commands:
+  - set -a
+  - export BRANCH=${DRONE_COMMIT_BRANCH}
+  - docker-compose -p ${DRONE_REPO_NAME}-${DRONE_COMMIT_BRANCH} up -d
+  volumes:
+  - name: dockersock
+    path: /var/run/docker.sock
+  when:
+    status:
+    - success
 #
 #- name: telegram-notify-deploy-finished
 #  image: appleboy/drone-telegram

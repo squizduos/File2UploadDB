@@ -299,7 +299,6 @@ $(document).ready(function() {
         webShowModalError();
         $('#selectStrategyModal').modal('toggle');
         workProgressBarMonitor.start(file_id, form_data);
-
     }
     
     // API: Load connections list
